@@ -120,8 +120,8 @@ def get_greeting():
       progress_id |= 8
       progress_msg = ""      
   else:
-    greeting = ("""<a  href=\"%s\">Sign in to vote or add 
-        your own quote</a>.""" % cgi.escape(users.create_login_url("/")))
+    greeting = (u"<a  href=\"%s\">Sign in to vote or add your own quote</a>." % cgi.escape(users.create_login_url("/")))
+    logging.info(greeting)
   return (progress_id, progress_msg, greeting)
 
 
@@ -153,7 +153,7 @@ def quote_for_template(quotes, user, page=0):
     index += 1
   return quotes_tpl
 
-def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page=0):
+def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page=0, comments=[]):
   """Bundle up all the values and generate a dictionary that can be used to 
   instantiate a base + base_quotelist template.
 
@@ -178,7 +178,8 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
      'quotes' : quote_for_template(quotes, user, page),
      'section': section,
      'nexturi': nexturi,
-     'prevuri': prevuri
+     'prevuri': prevuri,
+     'comments': quote_for_template(comments, user, page),
   }
   
   return template_values
@@ -208,7 +209,7 @@ class MainHandler(webapp.RequestHandler):
         user, quotes, 'Popular', nexturi, prevuri, page
       )    
     template_file = os.path.join(os.path.dirname(__file__), 'templates/index.html')    
-    self.response.out.write(template.render(template_file, template_values))
+    self.response.out.write(unicode(template.render(template_file, template_values)))
     
   def post(self):
     """Add a quote to the system."""
@@ -237,7 +238,7 @@ class MainHandler(webapp.RequestHandler):
       template_file = os.path.join(os.path.dirname(__file__), 
           'templates/add_quote_error.html'
       )
-      self.response.out.write(template.render(template_file, template_values))
+      self.response.out.write(unicode(template.render(template_file, template_values)))
     else:
       quote_id = models.add_quote(text, user, uri=uri)
       if quote_id is not None:
@@ -256,7 +257,7 @@ class MainHandler(webapp.RequestHandler):
         template_file = os.path.join(os.path.dirname(__file__), 
             'templates/add_quote_error.html'
           )    
-        self.response.out.write(template.render(template_file, template_values))        
+        self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
 class VoteHandler (webapp.RequestHandler):
@@ -296,7 +297,7 @@ class RecentHandler(webapp.RequestHandler):
 
     template_values = create_template_dict(user, quotes, 'Recent', nexturi, prevuri=None, page=page)
     template_file = os.path.join(os.path.dirname(__file__), 'templates/recent.html')    
-    self.response.out.write(template.render(template_file, template_values))
+    self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
 class FeedHandler(webapp.RequestHandler):
@@ -316,17 +317,18 @@ class FeedHandler(webapp.RequestHandler):
     template_values = create_template_dict(user, quotes, section.capitalize())
     template_file = os.path.join(os.path.dirname(__file__), 'templates/atom_feed.xml')    
     self.response.headers['Content-Type'] = 'application/atom+xml; charset=utf-8'
-    self.response.out.write(template.render(template_file, template_values))
+    self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
 class QuoteHandler (webapp.RequestHandler):
   """Handles requests for a single quote, such as a vote, or a permalink page"""
   
   def post(self, quoteid):
-    """Delete a quote."""
+    # """Delete a quote."""
     user = users.get_current_user()
-    models.del_quote(long(quoteid), user)
-    self.redirect('/')
+    quote = models.get_quote(long(quoteid))
+    models.comment_on_quote(quote, user, self.request.get('newcomment'))
+    self.redirect('')
 
   def get(self, quoteid):
     """Get a page for just the quote identified."""
@@ -336,10 +338,10 @@ class QuoteHandler (webapp.RequestHandler):
       return      
     user = users.get_current_user()
     quotes = [quote]
-
-    template_values = create_template_dict(user, quotes, 'Quote', nexturi=None, prevuri=None, page=0)
+    comments = models.get_comments_for_quote(quote.key().id())
+    template_values = create_template_dict(user, quotes, 'Quote', nexturi=None, prevuri=None, page=0, comments=comments)
     template_file = os.path.join(os.path.dirname(__file__), 'templates/singlequote.html')
-    self.response.out.write(template.render(template_file, template_values))
+    self.response.out.write(unicode(template.render(template_file, template_values)))
 
 application = webapp.WSGIApplication(
     [

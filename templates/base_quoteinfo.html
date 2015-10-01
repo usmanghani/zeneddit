@@ -1,9 +1,42 @@
-    
-  <table class="quoteinfo">
-  {% for quote in quotes %}
-    <tr><th>Votes:</th>  <td>{{ quote.votesum }}</td></tr>
-    <tr><th>Created:</th>  <td>{{ quote.created }}</td></tr>
-  {% endfor %}
-  </table>
+<table class="quoteinfo">
+    {% for quote in quotes %}
+		<tr>
+			<th>Votes:</th>
+			<td>{{ quote.votesum }}</td>
+		</tr>
+		<tr>
+			<th>Created:</th>
+			<td>{{ quote.created }}</td>
+		</tr>
+		<tr>
+			<th>Comments:</th>
+			<td>
+				<ul>
+                    {% for comment in comments %}
+						<li>
+                            {{ comment.quote }}
+						</li>
+                    {% endfor %}
+				</ul>
+			</td>
+		</tr>
+		<tr>
+			<th></th>
+			<td>
+                {% if loggedin %}
+					<div class="submit_tidbit">
+						<form action="/quote/{{ quote.id }}" method="post">
+							<p><label>New Comment: <br> <textarea name="newcomment" rows="12"
+							                                      cols="40"></textarea></label></p>
+
+							<p><input type="submit" value="Comment"/></p>
+						</form>
+					</div>
+                {% endif %}
+
+			</td>
+		</tr>
+    {% endfor %}
+</table>
   
 

@@ -29,7 +29,6 @@ from google.appengine.api import users
 PAGE_SIZE = 20
 DAY_SCALE = 4
 
-
 class Quote(db.Model):
   """Storage for a single quote and its metadata
   
@@ -41,14 +40,22 @@ class Quote(db.Model):
     creation_order: Totally unique index on all quotes in order of their creation.
     creator:        The user that added this quote.
   """
-  quote = db.StringProperty(required=True, multiline=True)
+  quote = db.TextProperty(required=True, multiline=True)
   uri   = db.StringProperty()
   rank = db.StringProperty()
   created = db.IntegerProperty(default=0)
   creation_order = db.StringProperty(default=" ")
   votesum = db.IntegerProperty(default=0)
   creator = db.UserProperty()
-  
+  q_type = db.BooleanProperty(default=False) # true if is comment
+  topic = db.StringProperty()
+
+# class Comment(db.Model):
+#   text = db.StringProperty(required=True, multiline=True)
+#   quote_id = db.IntegerProperty(required=True)
+#   # parent_comment_id = db.IntegerProperty(required=False)
+#   user = db.UserProperty(required=True)
+#   created = db.IntegerProperty(required=True)
 
 class Vote(db.Model):
   """Storage for a single vote by a single user on a single quote.
@@ -159,7 +166,8 @@ def add_quote(text, user, uri=None, _created=None):
       created=created, 
       creator=user, 
       creation_order = now.isoformat()[:19] + "|" + unique_user,
-      uri=uri
+      uri=uri,
+      q_type=False,
     )
     q.put()
     return q.key().id()
@@ -197,9 +205,9 @@ def get_quotes_newest(offset=None):
   """
   extra = None
   if offset is None:
-    quotes = Quote.gql('ORDER BY creation_order DESC').fetch(PAGE_SIZE + 1)
+    quotes = Quote.gql('WHERE q_type = FALSE ORDER BY creation_order DESC').fetch(PAGE_SIZE + 1)
   else:
-    quotes = Quote.gql("""WHERE creation_order <= :1 
+    quotes = Quote.gql("""WHERE creation_order <= :1 and q_type=FALSE
              ORDER BY creation_order DESC""", offset).fetch(PAGE_SIZE + 1)
     
   if len(quotes) > PAGE_SIZE:
@@ -251,7 +259,7 @@ def get_quotes(page=0):
     quotes = quotes[:PAGE_SIZE]
   return quotes, extra
 
-  
+
 def voted(quote, user):
   """Returns the value of a users vote on the specified quote, a value in [-1, 0, 1]."""
   val = 0
@@ -266,3 +274,24 @@ def voted(quote, user):
       memcache.set(memcachekey, val)
   return val
 
+def get_comments_for_quote(quote_id):
+  comments = Quote.gql("""WHERE ANCESTOR IS KEY('Quote', :1) AND q_type=TRUE""", quote_id)
+  return comments
+
+def comment_on_quote(quote, user, comment_text):
+    try:
+      now = datetime.datetime.now()
+      unique_user = _unique_user(user)
+      created = (now - datetime.datetime(2008, 10, 1)).days
+      comment = Quote(
+        quote=comment_text,
+        created=created,
+        creator=user,
+        creation_order = now.isoformat()[:19] + "|" + unique_user,
+        parent=quote,
+        q_type=True,
+      )
+      comment.put()
+      return comment.key().id()
+    except db.Error:
+      return None

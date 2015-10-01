@@ -23,7 +23,7 @@
   </head>
   <body>
     <div class="titlebar" ><h1>Overheard</h1>
-    <span class="login" >{{ greeting }}</span>      
+    <span class="login" >{{ greeting|safe }}</span>
     </div>
       
     {% if loggedin %}

@@ -32,7 +32,7 @@
 
         <td class="del">
         {% ifequal quote.creator loggedin %}
-            <form action="/quote/{{ quote.id }}" method="post">
+            <form action="/quote/{{ quote.id }}" method="delete">
              <input type="hidden" name="_method" value="delete" />
              <input type="submit" value="Delete" />
             </form>        
