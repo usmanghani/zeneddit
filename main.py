@@ -161,6 +161,7 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
      'greeting': greeting,
      'loggedin': user,
      'quotes' : quote_for_template(quotes, user, page),
+     'trending': models.get_trending_topics(),
      'section': section,
      'nexturi': nexturi,
      'prevuri': prevuri,
@@ -340,7 +341,7 @@ class QuoteHandler (webapp2.RequestHandler):
 
 class TrendingHandler(webapp2.RequestHandler):
   def get(self):
-    return models.get_trending_topics()
+    return self.response.out.write(unicode(models.get_trending_topics()))
 
 application = webapp2.WSGIApplication(
     [

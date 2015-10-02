@@ -21,6 +21,7 @@ Quotes, Votes and Voters in the Overheard application.
 
 import datetime
 import hashlib
+import logging
 
 from google.appengine.ext import ndb as db
 from google.appengine.api import memcache
@@ -397,5 +398,5 @@ def comment_on_quote(quote, user, comment_text):
 
 
 def get_trending_topics():
-  trending = Counter.query().order(-Counter.counter).fetch(10)
-  return [t.key.id() for t in trending]
+  return [t.key.id() for t in Counter.query().order(-Counter.counter).fetch(10)]
+
