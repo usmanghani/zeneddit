@@ -1,4 +1,3 @@
-
 """Zeneddit
 
 Demonstrates:
@@ -60,8 +59,8 @@ import cgi
 import logging
 import os
 import urlparse
+import webapp2
 from google.appengine.api import users
-from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 import models
 import wsgiref.handlers
@@ -121,7 +120,7 @@ def quote_for_template(quotes, user, page=0):
   index = 1 + page * models.PAGE_SIZE
   for quote in quotes:
     quotes_tpl.append({
-      'id': quote.key().id(),
+      'id': quote.key.urlsafe(),
       'uri': quote.uri,
       'voted': models.voted(quote, user),
       'quote': quote.quote,
@@ -129,6 +128,8 @@ def quote_for_template(quotes, user, page=0):
       'created': quote.creation_order[:10],
       'created_long': quote.creation_order[:19],
       'votesum': quote.votesum,
+      'up_votes': quote.up_votes,
+      'down_votes': quote.down_votes,
       'index':  index,
       'topic': quote.topic if quote.topic else 'General',
     })
@@ -151,7 +152,7 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
     A dictionary 
   
   """
-  progress_id, progress_msg, greeting = get_greeting()      
+  progress_id, progress_msg, greeting = get_greeting()
   template_values  = {
      'progress_id': progress_id,
      'progress_msg': progress_msg,
@@ -167,7 +168,7 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
   return template_values
 
 
-class MainHandler(webapp.RequestHandler):
+class MainHandler(webapp2.RequestHandler):
   """Handles the main page and adding new quotes."""
 
   def get(self):
@@ -253,7 +254,7 @@ class TopicHandler(MainHandler):
   def get(self, topic):
     return super(TopicHandler, self)._get_impl(topic=topic)
 
-class VoteHandler (webapp.RequestHandler):
+class VoteHandler (webapp2.RequestHandler):
   """Handles AJAX vote requests."""
 
   def post(self):
@@ -268,10 +269,10 @@ class VoteHandler (webapp.RequestHandler):
       self.response.set_status(400, 'Bad Request')
       return
     vote = int(vote)
-    models.set_vote(long(quoteid), user, vote)
+    models.set_vote(quoteid, user, vote)
 
 
-class RecentHandler(webapp.RequestHandler):
+class RecentHandler(webapp2.RequestHandler):
   """Handles the list of quotes ordered in reverse chronological order."""
 
   def get(self):
@@ -293,7 +294,7 @@ class RecentHandler(webapp.RequestHandler):
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
-class FeedHandler(webapp.RequestHandler):
+class FeedHandler(webapp2.RequestHandler):
   """Handles the list of quotes ordered in reverse chronological order."""
 
   def get(self, section):
@@ -312,30 +313,30 @@ class FeedHandler(webapp.RequestHandler):
     self.response.headers['Content-Type'] = 'application/atom+xml; charset=utf-8'
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
-class QuoteHandler (webapp.RequestHandler):
+class QuoteHandler (webapp2.RequestHandler):
   """Handles requests for a single quote, such as a vote, or a permalink page"""
   
   def post(self, quoteid):
     # """Delete a quote."""
     user = users.get_current_user()
-    quote = models.get_quote(long(quoteid))
+    quote = models.get_quote(quoteid)
     models.comment_on_quote(quote, user, self.request.get('newcomment'))
     self.redirect('')
 
   def get(self, quoteid):
     """Get a page for just the quote identified."""
-    quote = models.get_quote(long(quoteid))
+    quote = models.get_quote(quoteid)
     if quote == None:
       self.response.set_status(404, 'Not Found')
       return      
     user = users.get_current_user()
     quotes = [quote]
-    comments = models.get_comments_for_quote(quote.key().id())
+    comments = models.get_comments_for_quote(quote.key)
     template_values = create_template_dict(user, quotes, 'Quote', nexturi=None, prevuri=None, page=0, comments=comments)
     template_file = os.path.join(os.path.dirname(__file__), 'templates/singlequote.html')
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
-application = webapp.WSGIApplication(
+application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
         ('/vote/', VoteHandler),

@@ -22,7 +22,7 @@ Quotes, Votes and Voters in the Overheard application.
 import datetime
 import hashlib
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb as db
 from google.appengine.api import memcache
 from google.appengine.api import users
 
@@ -40,15 +40,17 @@ class Quote(db.Model):
     creation_order: Totally unique index on all quotes in order of their creation.
     creator:        The user that added this quote.
   """
-  quote = db.StringProperty(required=True, multiline=True)
+  quote = db.StringProperty(required=True)
   uri   = db.StringProperty()
-  rank = db.StringProperty()
+  rank = db.StringProperty(indexed=True)
   created = db.IntegerProperty(default=0)
-  creation_order = db.StringProperty(default=" ")
+  creation_order = db.StringProperty(default=" ", indexed=True)
   votesum = db.IntegerProperty(default=0)
+  up_votes = db.IntegerProperty(default=0)
+  down_votes = db.IntegerProperty(default=0)
   creator = db.UserProperty()
-  q_type = db.BooleanProperty(default=False) # true if is comment
-  topic = db.StringProperty(default="General")
+  q_type = db.BooleanProperty(default=False, indexed=True) # true if is comment
+  topic = db.StringProperty(default="General", indexed=True)
 
 # class Comment(db.Model):
 #   text = db.StringProperty(required=True, multiline=True)
@@ -92,9 +94,9 @@ def _get_or_create_voter(user):
   
   Returns a Voter for the given user.
   """
-  voter = Voter.get_by_key_name(user.email())
+  voter = Voter.get_by_id(id=user.email())
   if voter is None:
-    voter = Voter(key_name=user.email())
+    voter = Voter(id=user.email())
   return voter
 
 
@@ -117,7 +119,7 @@ def _set_progress_hasVoted(user):
       voter.hasVoted = True
       voter.put()
       
-  db.run_in_transaction(txn)
+  db.transaction(txn)
 
 
 def _unique_user(user):
@@ -134,7 +136,7 @@ def _unique_user(user):
     voter.put()
     return voter.count
 
-  count = db.run_in_transaction(txn)
+  count = db.transaction(txn)
 
   return hashlib.md5(user.email() + "|" + str(count)).hexdigest()
   
@@ -165,16 +167,16 @@ def add_quote(text, user, uri=None, _created=None, topic=None):
       quote=text, 
       created=created, 
       creator=user, 
-      creation_order = now.isoformat()[:19] + "|" + unique_user,
+      creation_order=now.isoformat()[:19] + "|" + unique_user,
       uri=uri,
       q_type=False,
       topic=topic,
     )
     q.put()
-    return q.key().id()
-  except db.Error:
-    return None 
-  
+    return q.key
+  except:
+    return None
+
 def del_quote(quote_id, user):
   """
   Remove a quote.
@@ -190,7 +192,7 @@ def get_quote(quote_id):
   """
   Retrieve a single quote.
   """
-  return Quote.get_by_id(quote_id)
+  return db.Key(urlsafe=quote_id).get()
 
 
 def get_quotes_newest(offset=None):
@@ -206,10 +208,9 @@ def get_quotes_newest(offset=None):
   """
   extra = None
   if offset is None:
-    quotes = Quote.gql('WHERE q_type = FALSE ORDER BY creation_order DESC').fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(Quote.q_type == False).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   else:
-    quotes = Quote.gql("""WHERE creation_order <= :1 and q_type=FALSE
-             ORDER BY creation_order DESC""", offset).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, Quote.creation_order <= offset)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
     
   if len(quotes) > PAGE_SIZE:
     extra = quotes[-1].creation_order
@@ -230,13 +231,13 @@ def get_quotes_by_topic(offset=None, topic=None):
   """
   extra = None
   if topic is None and offset is None:
-    quotes = Quote.gql('WHERE q_type = FALSE and topic = NULL ORDER BY creation_order DESC').fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == None)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   elif topic is None and offset is not None:
-    quotes = Quote.gql('WHERE creation_order <= :1 and q_type = FALSE and topic = NULL ORDER BY creation_order DESC', offset).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == None, Quote.creation_order <= offset)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   elif topic is not None and offset is None:
-    quotes = Quote.gql('WHERE q_type = FALSE and topic = :1 ORDER BY creation_order DESC', topic).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == topic)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   else:
-    quotes = Quote.gql('WHERE creation_order <= :1 and q_type=FALSE and topic = :2 ORDER BY creation_order DESC', offset, topic).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, topic == topic, Quote.creation_order <= offset)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
 
   if len(quotes) > PAGE_SIZE:
     extra = quotes[-1].creation_order
@@ -254,13 +255,18 @@ def set_vote(quote_id, user, newvote):
   email = user.email()
   
   def txn():
-    quote = Quote.get_by_id(quote_id)
-    vote = Vote.get_by_key_name(key_names = user.email(), parent = quote)
+    quote = quote_id.get()
+    if quote is None:
+      return
+    vote = Vote.get_by_id(id=user.email(), parent=quote.key)
     if vote is None:
-      vote = Vote(key_name = user.email(), parent = quote)
+      vote = Vote(id=user.email(), parent=quote.key)
     if vote.vote == newvote:
       return 
     quote.votesum = quote.votesum - vote.vote + newvote
+    quote.up_votes += 1 if vote.vote == 1 else 0
+    quote.down_votes += 1 if vote.vote == -1 else 0
+
     vote.vote = newvote
     # See the docstring of main.py for an explanation of
     # the following formula.
@@ -271,7 +277,8 @@ def set_vote(quote_id, user, newvote):
     db.put([vote, quote])
     memcache.set("vote|" + user.email() + "|" + str(quote_id), vote.vote)
 
-  db.run_in_transaction(txn)
+  db.transaction(txn)
+  # db.transaction_options(db.create_transaction_options(xg=True), txn)
   _set_progress_hasVoted(user)
 
   
@@ -281,11 +288,9 @@ def get_quotes(page=0, topic=None):
   assert page < 20
   extra = None
   if topic is None or topic == '' or topic.lower() == 'general':
-    quotes = Quote.gql('WHERE topic = NULL ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
-    quotes += Quote.gql('WHERE topic = \'\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
-    quotes += Quote.gql('WHERE topic = \'General\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    quotes = Quote.query(db.OR(Quote.topic == None, Quote.topic == '', Quote.topic == 'General')).order(-Quote.rank).fetch(PAGE_SIZE+1)
   else:
-    quotes = Quote.gql('WHERE topic = :1 ORDER BY rank DESC', topic).fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    quotes = Quote.query(Quote.topic == topic).order(-Quote.rank).fetch(PAGE_SIZE+1)
 
   if len(quotes) > PAGE_SIZE:
     if page < 19:
@@ -298,34 +303,30 @@ def voted(quote, user):
   """Returns the value of a users vote on the specified quote, a value in [-1, 0, 1]."""
   val = 0
   if user:
-    memcachekey = "vote|" + user.email() + "|" + str(quote.key().id())
+    memcachekey = "vote|" + user.email() + "|" + str(quote.key)
     val = memcache.get(memcachekey)
     if val is not None:
       return val
-    vote = Vote.get_by_key_name(key_names = user.email(), parent = quote)
+    vote = Vote.get_by_id(id=user.email(), parent=quote.key)
     if vote is not None:
       val = vote.vote
       memcache.set(memcachekey, val)
   return val
 
 def get_comments_for_quote(quote_id):
-  comments = Quote.gql("""WHERE ANCESTOR IS KEY('Quote', :1) AND q_type=TRUE""", quote_id)
+  comments = Quote.query(ancestor=quote_id).filter(Quote.q_type == True)
   return comments
 
 def comment_on_quote(quote, user, comment_text):
-    try:
-      now = datetime.datetime.now()
-      unique_user = _unique_user(user)
-      created = (now - datetime.datetime(2008, 10, 1)).days
-      comment = Quote(
-        quote=comment_text,
-        created=created,
-        creator=user,
-        creation_order = now.isoformat()[:19] + "|" + unique_user,
-        parent=quote,
-        q_type=True,
-      )
-      comment.put()
-      return comment.key().id()
-    except db.Error:
-      return None
+    now = datetime.datetime.now()
+    unique_user = _unique_user(user)
+    created = (now - datetime.datetime(2008, 10, 1)).days
+    comment = Quote(
+      quote=comment_text,
+      created=created,
+      creator=user,
+      creation_order=now.isoformat()[:19] + "|" + unique_user,
+      parent=quote.key,
+      q_type=True,
+    )
+    return comment.put()

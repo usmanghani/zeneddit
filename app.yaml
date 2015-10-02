@@ -1,5 +1,5 @@
 application: zeneddit
-version: 1
+version: 2
 runtime: python27
 api_version: 1
 threadsafe: no
@@ -22,6 +22,8 @@ handlers:
 
 - url: /update_schema
   script: update_schema_handler.app  # path to webapp2 application definition.
+  login: admin
+  secure: always
 
 - url: /.*
   script: main.py
