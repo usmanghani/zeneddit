@@ -25,3 +25,9 @@ indexes:
   properties:
   - name: rank
     direction: desc
+
+- kind: Quote
+  properties:
+  - name: topic
+  - name: rank
+    direction: desc

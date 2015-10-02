@@ -40,7 +40,7 @@ class Quote(db.Model):
     creation_order: Totally unique index on all quotes in order of their creation.
     creator:        The user that added this quote.
   """
-  quote = db.TextProperty(required=True, multiline=True)
+  quote = db.StringProperty(required=True, multiline=True)
   uri   = db.StringProperty()
   rank = db.StringProperty()
   created = db.IntegerProperty(default=0)
@@ -48,7 +48,7 @@ class Quote(db.Model):
   votesum = db.IntegerProperty(default=0)
   creator = db.UserProperty()
   q_type = db.BooleanProperty(default=False) # true if is comment
-  topic = db.StringProperty()
+  topic = db.StringProperty(default="General")
 
 # class Comment(db.Model):
 #   text = db.StringProperty(required=True, multiline=True)
@@ -139,7 +139,7 @@ def _unique_user(user):
   return hashlib.md5(user.email() + "|" + str(count)).hexdigest()
   
 
-def add_quote(text, user, uri=None, _created=None):
+def add_quote(text, user, uri=None, _created=None, topic=None):
   """
   Add a new quote to the datastore.
   
@@ -168,6 +168,7 @@ def add_quote(text, user, uri=None, _created=None):
       creation_order = now.isoformat()[:19] + "|" + unique_user,
       uri=uri,
       q_type=False,
+      topic=topic,
     )
     q.put()
     return q.key().id()
@@ -216,6 +217,33 @@ def get_quotes_newest(offset=None):
   return quotes, extra
 
 
+def get_quotes_by_topic(offset=None, topic=None):
+  """
+  Returns 10 quotes per page in created order.
+
+  Args
+    offset:  The id to use to start the page at. This is the value of 'extra'
+               returned from a previous call to this function.
+
+  Returns
+    (quotes, extra)
+  """
+  extra = None
+  if topic is None and offset is None:
+    quotes = Quote.gql('WHERE q_type = FALSE and topic = NULL ORDER BY creation_order DESC').fetch(PAGE_SIZE + 1)
+  elif topic is None and offset is not None:
+    quotes = Quote.gql('WHERE creation_order <= :1 and q_type = FALSE and topic = NULL ORDER BY creation_order DESC', offset).fetch(PAGE_SIZE + 1)
+  elif topic is not None and offset is None:
+    quotes = Quote.gql('WHERE q_type = FALSE and topic = :1 ORDER BY creation_order DESC', topic).fetch(PAGE_SIZE + 1)
+  else:
+    quotes = Quote.gql('WHERE creation_order <= :1 and q_type=FALSE and topic = :2 ORDER BY creation_order DESC', offset, topic).fetch(PAGE_SIZE + 1)
+
+  if len(quotes) > PAGE_SIZE:
+    extra = quotes[-1].creation_order
+    quotes = quotes[:PAGE_SIZE]
+  return quotes, extra
+
+
 def set_vote(quote_id, user, newvote):
   """
   Record 'user' casting a 'vote' for a quote with an id of 'quote_id'.
@@ -247,12 +275,18 @@ def set_vote(quote_id, user, newvote):
   _set_progress_hasVoted(user)
 
   
-def get_quotes(page=0):
+def get_quotes(page=0, topic=None):
   """Returns PAGE_SIZE quotes per page in rank order. Limit to 20 pages."""
   assert page >= 0
   assert page < 20
   extra = None
-  quotes = Quote.gql('ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+  if topic is None or topic == '' or topic.lower() == 'general':
+    quotes = Quote.gql('WHERE topic = NULL ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    quotes += Quote.gql('WHERE topic = \'\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    quotes += Quote.gql('WHERE topic = \'General\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+  else:
+    quotes = Quote.gql('WHERE topic = :1 ORDER BY rank DESC', topic).fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+
   if len(quotes) > PAGE_SIZE:
     if page < 19:
       extra = quotes[-1]

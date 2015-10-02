@@ -1,6 +1,10 @@
 <table class="quoteinfo">
     {% for quote in quotes %}
 		<tr>
+			<th>Topic:</th>
+			<td>{{ quote.topic }}</td>
+		</tr>
+		<tr>
 			<th>Votes:</th>
 			<td>{{ quote.votesum }}</td>
 		</tr>

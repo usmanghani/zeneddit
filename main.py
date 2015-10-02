@@ -148,7 +148,8 @@ def quote_for_template(quotes, user, page=0):
       'created': quote.creation_order[:10],
       'created_long': quote.creation_order[:19],
       'votesum': quote.votesum,
-      'index':  index        
+      'index':  index,
+      'topic': quote.topic if quote.topic else 'General',
     })
     index += 1
   return quotes_tpl
@@ -189,11 +190,14 @@ class MainHandler(webapp.RequestHandler):
   """Handles the main page and adding new quotes."""
 
   def get(self):
+    return self._get_impl(topic=None)
+
+  def _get_impl(self, topic):
     """The most popular quotes in order, broken into pages, 
        served as HTML."""
     user = users.get_current_user()
     page = int(self.request.get('p', '0'))
-    quotes, next = models.get_quotes(page)
+    quotes, next = models.get_quotes(page, topic)
     if next:
       nexturi = '/?p=%d' % (page + 1)
     else:
@@ -221,6 +225,7 @@ class MainHandler(webapp.RequestHandler):
       self.redirect('/')
       return
     uri = self.request.get('tidbituri').strip()
+    topic = self.request.get('tidbittopic').strip()
     parsed_uri = urlparse.urlparse(uri)
 
     progress_id, progress_msg, greeting = get_greeting()      
@@ -233,6 +238,7 @@ class MainHandler(webapp.RequestHandler):
          'loggedin': user,
          'text' : text,
          'uri' : uri,
+         'topic': topic,
          'error_msg' : 'The supplied link is not a valid absolute URI'
       }
       template_file = os.path.join(os.path.dirname(__file__), 
@@ -240,7 +246,7 @@ class MainHandler(webapp.RequestHandler):
       )
       self.response.out.write(unicode(template.render(template_file, template_values)))
     else:
-      quote_id = models.add_quote(text, user, uri=uri)
+      quote_id = models.add_quote(text, user, uri=uri, topic=topic)
       if quote_id is not None:
         models.set_vote(long(quote_id), user, 1)
         self.redirect('/recent/')
@@ -252,6 +258,7 @@ class MainHandler(webapp.RequestHandler):
            'loggedin': user,
            'text' : text,
            'uri' : uri,
+           'topic': topic,
            'error_msg' : 'An error occured while adding this quote, please try again.'
         }
         template_file = os.path.join(os.path.dirname(__file__), 
@@ -259,6 +266,11 @@ class MainHandler(webapp.RequestHandler):
           )    
         self.response.out.write(unicode(template.render(template_file, template_values)))
 
+class TopicHandler(MainHandler):
+  """Handles the main page and adding new quotes."""
+
+  def get(self, topic):
+    return super(TopicHandler, self)._get_impl(topic=topic)
 
 class VoteHandler (webapp.RequestHandler):
   """Handles AJAX vote requests."""
@@ -315,10 +327,9 @@ class FeedHandler(webapp.RequestHandler):
       return      
 
     template_values = create_template_dict(user, quotes, section.capitalize())
-    template_file = os.path.join(os.path.dirname(__file__), 'templates/atom_feed.xml')    
+    template_file = os.path.join(os.path.dirname(__file__), 'templates/atom_feed.xml')
     self.response.headers['Content-Type'] = 'application/atom+xml; charset=utf-8'
     self.response.out.write(unicode(template.render(template_file, template_values)))
-
 
 class QuoteHandler (webapp.RequestHandler):
   """Handles requests for a single quote, such as a vote, or a permalink page"""
@@ -350,6 +361,7 @@ application = webapp.WSGIApplication(
         ('/recent/', RecentHandler),
         ('/quote/(.*)', QuoteHandler),
         ('/feed/(recent|popular)/', FeedHandler),
+        ('/r/(.*)', TopicHandler),
     ], debug=True)
 
 def main():

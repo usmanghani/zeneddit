@@ -4,6 +4,9 @@ runtime: python27
 api_version: 1
 threadsafe: no
 
+builtins:
+- deferred: on
+
 handlers:
 - url: /test.*
   script: gaeunit.py
@@ -14,7 +17,11 @@ handlers:
 - url: /js/
   static_dir: js
 
+- url: /update_schema
+  script: update_schema_handler.app  # path to webapp2 application definition.
+
 - url: /.*
   script: main.py
+
 
 
