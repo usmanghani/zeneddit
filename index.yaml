@@ -11,19 +11,6 @@ indexes:
 # your application using appcfg.py.
 
 - kind: Quote
-  ancestor: yes
-  properties:
-  - name: topic
-  - name: rank
-    direction: desc
-
-- kind: Quote
-  properties:
-  - name: topic
-  - name: creation_order
-    direction: desc
-
-- kind: Quote
   properties:
   - name: q_type
   - name: creation_order
@@ -35,3 +22,21 @@ indexes:
   - name: creation_order
     direction: desc
 
+- kind: Quote
+  properties:
+  - name: topic
+  - name: creation_order
+    direction: desc
+
+- kind: Quote
+  properties:
+  - name: topic
+  - name: rank
+    direction: desc
+
+- kind: Quote
+  ancestor: yes
+  properties:
+  - name: topic
+  - name: rank
+    direction: desc
