@@ -59,8 +59,8 @@ import cgi
 import logging
 import os
 import urlparse
+import webapp2
 from google.appengine.api import users
-from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 import models
 import wsgiref.handlers
@@ -168,7 +168,7 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
   return template_values
 
 
-class MainHandler(webapp.RequestHandler):
+class MainHandler(webapp2.RequestHandler):
   """Handles the main page and adding new quotes."""
 
   def get(self):
@@ -254,7 +254,7 @@ class TopicHandler(MainHandler):
   def get(self, topic):
     return super(TopicHandler, self)._get_impl(topic=topic)
 
-class VoteHandler (webapp.RequestHandler):
+class VoteHandler (webapp2.RequestHandler):
   """Handles AJAX vote requests."""
 
   def post(self):
@@ -272,7 +272,7 @@ class VoteHandler (webapp.RequestHandler):
     models.set_vote(quoteid, user, vote)
 
 
-class RecentHandler(webapp.RequestHandler):
+class RecentHandler(webapp2.RequestHandler):
   """Handles the list of quotes ordered in reverse chronological order."""
 
   def get(self):
@@ -294,7 +294,7 @@ class RecentHandler(webapp.RequestHandler):
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
-class FeedHandler(webapp.RequestHandler):
+class FeedHandler(webapp2.RequestHandler):
   """Handles the list of quotes ordered in reverse chronological order."""
 
   def get(self, section):
@@ -313,7 +313,7 @@ class FeedHandler(webapp.RequestHandler):
     self.response.headers['Content-Type'] = 'application/atom+xml; charset=utf-8'
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
-class QuoteHandler (webapp.RequestHandler):
+class QuoteHandler (webapp2.RequestHandler):
   """Handles requests for a single quote, such as a vote, or a permalink page"""
   
   def post(self, quoteid):
@@ -336,7 +336,7 @@ class QuoteHandler (webapp.RequestHandler):
     template_file = os.path.join(os.path.dirname(__file__), 'templates/singlequote.html')
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
-application = webapp.WSGIApplication(
+application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
         ('/vote/', VoteHandler),
