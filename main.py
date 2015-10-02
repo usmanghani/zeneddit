@@ -133,6 +133,7 @@ def quote_for_template(quotes, user, page=0):
       'down_votes': quote.down_votes,
       'index':  index,
       'topic': quote.topic if quote.topic else 'General',
+      'rank': quote.rank,
     })
     index += 1
   return quotes_tpl

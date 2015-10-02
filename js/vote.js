@@ -49,9 +49,9 @@ TODO Do something if the user clicks and isn't logged in.
           '/vote/',
           {'quoteid': quoteid, 'vote': -1},
           function() {
-              $(e.target).attr('src', '/images/up-grey.png');
-              $(other).attr('src', '/images/down.png');
-              star_for_voting();
+              //$(e.target).attr('src', '/images/up-grey.png');
+              //$(other).attr('src', '/images/down.png');
+              //star_for_voting();
           }
         );
 
@@ -66,9 +66,9 @@ TODO Do something if the user clicks and isn't logged in.
           '/vote/',
           {'quoteid': quoteid, 'vote': 1},
           function() {
-              $(e.target).attr('src', '/images/down-grey.png');
-              $(other).attr('src', '/images/up.png');
-              star_for_voting();
+              //$(e.target).attr('src', '/images/down-grey.png');
+              //$(other).attr('src', '/images/up.png');
+              //star_for_voting();
           }
         );
 

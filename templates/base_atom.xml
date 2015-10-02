@@ -2,14 +2,14 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title type="text">Overheard | {{ section|escape }}</title>
   <updated>2005-07-31T12:29:29Z</updated>
-  <id>http://just-overheard-it.appspot.com/feed/{{ section|lower|escape }}/</id>
+  <id>/feed/{{ section|lower|escape }}/</id>
   <link rel="alternate" type="text/html"
-    hreflang="en" href="http://just-overheard-it.appspot.com/"/>
+    hreflang="en" href="/"/>
   <link rel="self" type="application/atom+xml"
-    href="http://just-overheard-it.appspot.com/feed/{{ section|lower|escape }}/"/>
+    href="/feed/{{ section|lower|escape }}/"/>
   <author>
     <name>The Overheard Community</name>
-    <uri>http://just-overheard-it.appspot.com/</uri>
+    <uri>http://zeneddit.appspot.com/</uri>
   </author>
 
     

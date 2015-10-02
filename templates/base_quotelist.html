@@ -5,44 +5,53 @@
 
 		<td class="index"><a href="/quote/{{ quote.id }}">{{ quote.index }}</a></td>
 
-		<td>
-            {% ifequal quote.voted -1 %}
-			<img src="/images/down.png" class="votedown">
-            {% else %}
-			<img src="/images/down-grey.png" class="votedown">
-            {% endifequal %}
-            {{ quote.down_votes }}
-		</td>
 
 		<td>
             {% ifequal quote.voted 1 %}
-				<img src="/images/up.png" class="voteup"/>
-                {% else %}
-				<img src="/images/up-grey.png" class="voteup"/>
+            {#				<img src="/images/up.png" class="voteup"/>#}
+			<a href="#" class="votedown">&#x2206; ({{ quote.up_votes }})</a>
+            {% else %}
+            {#				<img src="/images/up-grey.png" class="voteup"/>#}
+			<a href="#" class="votedown">&#x2206; ({{ quote.up_votes }})</a>
             {% endifequal %}
-            {{ quote.up_votes }}
+		</td>
+
+		<td>
+            {% ifequal quote.voted -1 %}
+                {#				<img src="/images/down.png" class="votedown">#}
+				<a href="#" class="votedown">&#x2207; ({{ quote.down_votes }})</a>
+                {% else %}
+                {#				<img src="/images/down-grey.png" class="votedown">#}
+				<a href="#" class="votedown">&#x2207; ({{ quote.down_votes }})</a>
+            {% endifequal %}
 		</td>
 
 		<td class="quote">
             {% if quote.uri %}
 				<a href="{{ quote.uri|escape }}"><span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
-				</a><br>
+
+				</a><sub><a href="/r/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> /r/{{ quote.topic|escape }}
+				</a></sub><br>
             {% else %}
-				<span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }} <br>
+				<span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
+	            <sub><a href="/r/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> /r/{{ quote.topic|escape }}
+				</a></sub><br>
             {% endif %}
 		</td>
 
-		<td class="quote">
-
-            {% ifnotequal quote.topic None %}
-				<a href="/r/{{ quote.topic|escape }}"><span
-						class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}
-				</a><br>
+{#		<td class="quote">#}
+{##}
+{#            {% ifnotequal quote.topic None %}#}
+{#				<a href="/r/{{ quote.topic|escape }}"><span#}
+{#						class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}#}
+{#				</a><br>#}
                 {#            {% else %}#}
                 {#				<span class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }} <br>#}
-            {% endifnotequal %}
-
-		</td>
+{#            {% endifnotequal %}#}
+{##}
+{#		</td>#}
 	</tr>
     {% endfor %}
 </table>

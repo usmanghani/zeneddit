@@ -22,7 +22,7 @@
 				<ul>
                     {% for comment in comments %}
 						<li>
-                            {{ comment.quote }}
+                            {{ comment.quote }}  &#x2206; ({{ comment.up_votes }}) &#x2207; ({{ comment.down_votes }})
 						</li>
                     {% endfor %}
 				</ul>

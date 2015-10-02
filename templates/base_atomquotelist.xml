@@ -2,7 +2,7 @@
      <entry>
        <title type="text">{{ quote.quote|escape }}</title>
        <link rel="alternate" type="text/html"
-          href="http://just-overheard-it.appspot.com/quote/{{ quote.id }}"/>
+          href="/quote/{{ quote.id }}"/>
        <id>http://just-overheard-it.appspot.com/quote/{{ quote.id }}</id>
        <updated>{{ quote.created_long }}Z</updated>
      </entry>

@@ -254,6 +254,30 @@ def get_quotes_by_topic(offset=None, topic=None):
   return quotes, extra
 
 
+def rank_quote(ups, downs, date):
+  from datetime import datetime
+  from math import log
+
+  epoch = datetime(1970, 1, 1)
+
+  def epoch_seconds(date):
+      """Returns the number of seconds from the epoch to date."""
+      td = date - epoch
+      return td.days * 86400 + td.seconds + (float(td.microseconds) / 1000000)
+
+  def score(ups, downs):
+      return ups - downs
+
+  def hot(ups, downs, date):
+      """The hot formula. Should match the equivalent function in postgres."""
+      s = score(ups, downs)
+      order = log(max(abs(s), 1), 10)
+      sign = 1 if s > 0 else -1 if s < 0 else 0
+      seconds = epoch_seconds(date) - 1134028003
+      return round(sign * order + seconds / 45000, 7)
+
+  return hot(ups, downs, date)
+
 def set_vote(quote_id, user, newvote):
   """
   Record 'user' casting a 'vote' for a quote with an id of 'quote_id'.
@@ -285,10 +309,11 @@ def set_vote(quote_id, user, newvote):
 
     # See the docstring of main.py for an explanation of
     # the following formula.
-    quote.rank = "%020d|%s" % (
-      long(quote.created * DAY_SCALE + quote.votesum), 
-      quote.creation_order
-      )
+    # quote.rank = "%020d|%s" % (
+    #   long(quote.created * DAY_SCALE + quote.votesum),
+    #   quote.creation_order
+    #   )
+    quote.rank = rank_quote(quote.up_votes, quote.down_votes, datetime.datetime.now())
     db.put_multi([vote, quote, voter])
     memcache.set("vote|" + user.email() + "|" + str(quote_id), vote.vote)
 
