@@ -6,19 +6,25 @@
 		<td class="index"><a href="/quote/{{ quote.id }}">{{ quote.index }}</a></td>
 
 		<td>
-            {% ifequal quote.voted -1 %}
+			<span>
+            {% ifequal quote.voted 1 %}
 			<img src="/images/down.png" class="votedown">
             {% else %}
 			<img src="/images/down-grey.png" class="votedown">
             {% endifequal %}
+			{{ quote.down_votes }}
+			</span>
 		</td>
 
 		<td>
-            {% ifequal quote.voted 1 %}
-				<img src="/images/up.png" class="voteup"/>
+			<span>
+            {% ifequal quote.voted -1 %}
+	            <img src="/images/up.png" class="voteup"/>
                 {% else %}
-				<img src="/images/up-grey.png" class="voteup"/>
+	            <img src="/images/up-grey.png" class="voteup"/>
             {% endifequal %}
+                {{ quote.up_votes }}
+			</span>
 		</td>
 
 		<td class="quote">
@@ -35,20 +41,11 @@
             {% ifnotequal quote.topic None %}
 				<a href="/r/{{ quote.topic|escape }}"><span class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}
 				</a><br>
-{#            {% else %}#}
-{#				<span class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }} <br>#}
+                {#            {% else %}#}
+                {#				<span class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }} <br>#}
             {% endifnotequal %}
 
 		</td>
-		<td class="del">
-            {% ifequal quote.creator loggedin %}
-				<form action="/quote/{{ quote.id }}" method="delete">
-					<input type="hidden" name="_method" value="delete"/>
-					<input type="submit" value="Delete"/>
-				</form>
-            {% endifequal %}
-		</td>
-
 	</tr>
     {% endfor %}
 </table>
