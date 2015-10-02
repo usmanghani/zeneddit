@@ -6,25 +6,21 @@
 		<td class="index"><a href="/quote/{{ quote.id }}">{{ quote.index }}</a></td>
 
 		<td>
-			<span>
-            {% ifequal quote.voted 1 %}
+            {% ifequal quote.voted -1 %}
 			<img src="/images/down.png" class="votedown">
             {% else %}
 			<img src="/images/down-grey.png" class="votedown">
             {% endifequal %}
-			{{ quote.down_votes }}
-			</span>
+            {{ quote.down_votes }}
 		</td>
 
 		<td>
-			<span>
-            {% ifequal quote.voted -1 %}
-	            <img src="/images/up.png" class="voteup"/>
+            {% ifequal quote.voted 1 %}
+				<img src="/images/up.png" class="voteup"/>
                 {% else %}
-	            <img src="/images/up-grey.png" class="voteup"/>
+				<img src="/images/up-grey.png" class="voteup"/>
             {% endifequal %}
-                {{ quote.up_votes }}
-			</span>
+            {{ quote.up_votes }}
 		</td>
 
 		<td class="quote">
@@ -39,7 +35,8 @@
 		<td class="quote">
 
             {% ifnotequal quote.topic None %}
-				<a href="/r/{{ quote.topic|escape }}"><span class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}
+				<a href="/r/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}
 				</a><br>
                 {#            {% else %}#}
                 {#				<span class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }} <br>#}

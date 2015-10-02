@@ -88,8 +88,9 @@ def get_greeting():
   progress_id = 1
   progress_msg = 'You get one star just for showing up.'
   if user:
-    greeting = ('%s (<a class="loggedin" href="%s">sign out</a>)' % 
-        (user.nickname(), cgi.escape(users.create_logout_url('/'))))
+    voter = models._get_or_create_voter(user)
+    greeting = ('%s (%d) (<a class="loggedin" href="%s">sign out</a>)' %
+        (user.nickname(), voter.karma, cgi.escape(users.create_logout_url('/'))))
     progress_id = 3
     progress_msg = 'One more star for logging in.'
     has_voted, has_added_quote = models.get_progress(user)    
@@ -230,7 +231,7 @@ class MainHandler(webapp2.RequestHandler):
     else:
       quote_id = models.add_quote(text, user, uri=uri, topic=topic)
       if quote_id is not None:
-        models.set_vote(long(quote_id), user, 1)
+        models.set_vote(quote_id, user, 1)
         self.redirect('/recent/')
       else:
         template_values  = {

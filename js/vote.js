@@ -47,10 +47,10 @@ TODO Do something if the user clicks and isn't logged in.
         var other = parpar.find('.votedown');
         $.post(
           '/vote/',
-          {'quoteid': quoteid, 'vote': -11},
+          {'quoteid': quoteid, 'vote': -1},
           function() {
-              $(e.target).attr('src', '/images/up.png');
-              $(other).attr('src', '/images/down-grey.png');
+              $(e.target).attr('src', '/images/up-grey.png');
+              $(other).attr('src', '/images/down.png');
               star_for_voting();
           }
         );
@@ -66,8 +66,8 @@ TODO Do something if the user clicks and isn't logged in.
           '/vote/',
           {'quoteid': quoteid, 'vote': 1},
           function() {
-              $(e.target).attr('src', '/images/down.png');
-              $(other).attr('src', '/images/up-grey.png');
+              $(e.target).attr('src', '/images/down-grey.png');
+              $(other).attr('src', '/images/up.png');
               star_for_voting();
           }
         );
@@ -85,13 +85,13 @@ TODO Do something if the user clicks and isn't logged in.
          /* Attach the handlers to each up and down image to handle clicks for voting.  */
          $('.tidbits .voteup').each(
            function() {
-               $(this).click(votedown);
+               $(this).click(voteup);
            }
          );
 
          $('.tidbits .votedown').each(
            function() {
-               $(this).click(voteup);
+               $(this).click(votedown);
            }
          );
       } else {

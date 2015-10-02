@@ -84,7 +84,8 @@ class Voter(db.Model):
   """
   count = db.IntegerProperty(default=0)
   hasVoted = db.BooleanProperty(default=False)
-  hasAddedQuote = db.BooleanProperty(default=False)  
+  hasAddedQuote = db.BooleanProperty(default=False)
+  karma = db.IntegerProperty(default=1)
 
 
 def _get_or_create_voter(user):
@@ -122,7 +123,7 @@ def _set_progress_hasVoted(user):
   db.transaction(txn)
 
 
-def _unique_user(user):
+def _unique_user(user, transact=True):
   """
   Creates a unique string by using an increasing
   counter sharded per user. The resulting string
@@ -136,7 +137,10 @@ def _unique_user(user):
     voter.put()
     return voter.count
 
-  count = db.transaction(txn)
+  if transact:
+    count = db.transaction(txn)
+  else:
+    count = txn()
 
   return hashlib.md5(user.email() + "|" + str(count)).hexdigest()
   
@@ -155,27 +159,32 @@ def add_quote(text, user, uri=None, _created=None, topic=None):
   Returns  
     The id of the quote or None if the add failed.
   """
-  try:
-    now = datetime.datetime.now()
-    unique_user = _unique_user(user)
-    if _created:
-      created = _created
-    else:
-      created = (now - datetime.datetime(2008, 10, 1)).days
-      
-    q = Quote(
-      quote=text, 
-      created=created, 
-      creator=user, 
-      creation_order=now.isoformat()[:19] + "|" + unique_user,
-      uri=uri,
-      q_type=False,
-      topic=topic,
-    )
-    q.put()
-    return q.key
-  except:
-    return None
+  def txn():
+    try:
+      now = datetime.datetime.now()
+      unique_user = _unique_user(user, transact=False)
+      if _created:
+        created = _created
+      else:
+        created = (now - datetime.datetime(2008, 10, 1)).days
+      voter = _get_or_create_voter(user)
+      voter.karma += 1
+
+      q = Quote(
+        quote=text,
+        created=created,
+        creator=user,
+        creation_order=now.isoformat()[:19] + "|" + unique_user,
+        uri=uri,
+        q_type=False,
+        topic=topic,
+      )
+
+      db.put_multi([q, voter])
+      return q.key
+    except:
+      return None
+  return db.transaction(txn, xg=True)
 
 def del_quote(quote_id, user):
   """
@@ -252,33 +261,38 @@ def set_vote(quote_id, user, newvote):
   """
   if user is None:
     return
-  email = user.email()
   
   def txn():
-    quote = quote_id.get()
+    voter = _get_or_create_voter(user)
+    if voter.hasVoted:
+      return
+
+    quote = db.Key(urlsafe=quote_id).get()
     if quote is None:
       return
+    if quote.creator != user:
+      voter.karma += 1
     vote = Vote.get_by_id(id=user.email(), parent=quote.key)
     if vote is None:
       vote = Vote(id=user.email(), parent=quote.key)
     if vote.vote == newvote:
-      return 
-    quote.votesum = quote.votesum - vote.vote + newvote
+      return
+
+    vote.vote = newvote
+
     quote.up_votes += 1 if vote.vote == 1 else 0
     quote.down_votes += 1 if vote.vote == -1 else 0
 
-    vote.vote = newvote
     # See the docstring of main.py for an explanation of
     # the following formula.
     quote.rank = "%020d|%s" % (
       long(quote.created * DAY_SCALE + quote.votesum), 
       quote.creation_order
       )
-    db.put([vote, quote])
+    db.put_multi([vote, quote, voter])
     memcache.set("vote|" + user.email() + "|" + str(quote_id), vote.vote)
 
-  db.transaction(txn)
-  # db.transaction_options(db.create_transaction_options(xg=True), txn)
+  db.transaction(txn, xg=True)
   _set_progress_hasVoted(user)
 
   
@@ -318,8 +332,11 @@ def get_comments_for_quote(quote_id):
   return comments
 
 def comment_on_quote(quote, user, comment_text):
+  def txn():
     now = datetime.datetime.now()
-    unique_user = _unique_user(user)
+    unique_user = _unique_user(user, transact=False)
+    voter = _get_or_create_voter(user)
+    voter.karma += 1
     created = (now - datetime.datetime(2008, 10, 1)).days
     comment = Quote(
       quote=comment_text,
@@ -329,4 +346,5 @@ def comment_on_quote(quote, user, comment_text):
       parent=quote.key,
       q_type=True,
     )
-    return comment.put()
+    return db.put_multi([comment, voter])
+  return db.transaction(txn, xg=True)
