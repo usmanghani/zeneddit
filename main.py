@@ -340,7 +340,7 @@ class QuoteHandler (webapp2.RequestHandler):
 
 class TrendingHandler(webapp2.RequestHandler):
   def get(self):
-    return models.get_trending_topics()
+    return self.response.out.write(unicode(models.get_trending_topics()))
 
 application = webapp2.WSGIApplication(
     [
