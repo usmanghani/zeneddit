@@ -338,6 +338,10 @@ class QuoteHandler (webapp2.RequestHandler):
     template_file = os.path.join(os.path.dirname(__file__), 'templates/singlequote.html')
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
+class TrendingHandler(webapp2.RequestHandler):
+  def get(self):
+    return models.get_trending_topics()
+
 application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
@@ -346,6 +350,7 @@ application = webapp2.WSGIApplication(
         ('/quote/(.*)', QuoteHandler),
         ('/feed/(recent|popular)/', FeedHandler),
         ('/r/(.*)', TopicHandler),
+        ('/trending', TrendingHandler),
     ], debug=True)
 
 def main():

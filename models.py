@@ -29,6 +29,10 @@ from google.appengine.api import users
 PAGE_SIZE = 20
 DAY_SCALE = 4
 
+class Counter(db.Model):
+  """ id is the name of the counter """
+  counter = db.IntegerProperty()
+
 class Quote(db.Model):
   """Storage for a single quote and its metadata
   
@@ -100,6 +104,11 @@ def _get_or_create_voter(user):
     voter = Voter(id=user.email())
   return voter
 
+def _get_or_create_counter(topic):
+  counter = Counter.get_by_id(id=topic)
+  if counter is None:
+    counter = Counter(id=topic, counter=0)
+  return counter
 
 def get_progress(user):
   """
@@ -180,7 +189,16 @@ def add_quote(text, user, uri=None, _created=None, topic=None):
         topic=topic,
       )
 
-      db.put_multi([q, voter])
+      counter = None
+      if topic not in ['General', '', None]:
+        counter = _get_or_create_counter(topic)
+        counter.counter += 1
+
+      if counter:
+        db.put_multi([q, voter, counter])
+      else:
+        db.put_multi([q, voter])
+
       return q.key
     except:
       return None
@@ -296,6 +314,9 @@ def set_vote(quote_id, user, newvote):
       return
     if quote.creator != user:
       voter.karma += 1
+    creator_voter = _get_or_create_voter(quote.creator)
+    creator_voter.karma += newvote
+
     vote = Vote.get_by_id(id=user.email(), parent=quote.key)
     if vote is None:
       vote = Vote(id=user.email(), parent=quote.key)
@@ -373,3 +394,8 @@ def comment_on_quote(quote, user, comment_text):
     )
     return db.put_multi([comment, voter])
   return db.transaction(txn, xg=True)
+
+
+def get_trending_topics():
+  trending = Counter.query().order(-Counter.counter).fetch(10)
+  return [t.key.id() for t in trending]
