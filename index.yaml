@@ -1,6 +1,7 @@
 indexes:
 
 - kind: Quote
+  ancenstor: yes
   properties:
   - name: topic
   - name: rank
@@ -17,6 +18,7 @@ indexes:
 # your application using appcfg.py.
 
 - kind: Quote
+  ancestor:yes
   properties:
   - name: q_type
   - name: creation_order
