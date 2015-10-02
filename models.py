@@ -290,8 +290,8 @@ def get_quotes(page=0, topic=None):
   extra = None
   if topic is None or topic == '' or topic.lower() == 'general':
     # quotes = Quote.gql('WHERE topic = NULL ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
-    quotes = Quote.gql('WHERE topic = \'\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
-    quotes += Quote.gql('WHERE topic = \'General\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    # quotes = Quote.gql('WHERE topic = \'\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    quotes = Quote.gql('WHERE topic = \'General\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
   else:
     quotes = Quote.gql('WHERE topic = :1 ORDER BY rank DESC', topic).fetch(PAGE_SIZE+1, page*PAGE_SIZE)
 
