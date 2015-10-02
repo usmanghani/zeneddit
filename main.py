@@ -161,6 +161,7 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
      'greeting': greeting,
      'loggedin': user,
      'quotes' : quote_for_template(quotes, user, page),
+     'trending': models.get_trending_topics(),
      'section': section,
      'nexturi': nexturi,
      'prevuri': prevuri,
