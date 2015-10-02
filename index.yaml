@@ -18,18 +18,8 @@ indexes:
 
 - kind: Quote
   properties:
-  - name: creation_order
-    direction: desc
-
-- kind: Quote
-  properties:
   - name: q_type
   - name: creation_order
-    direction: desc
-
-- kind: Quote
-  properties:
-  - name: rank
     direction: desc
 
 - kind: Quote
