@@ -167,16 +167,16 @@ def add_quote(text, user, uri=None, _created=None, topic=None):
       quote=text, 
       created=created, 
       creator=user, 
-      creation_order = now.isoformat()[:19] + "|" + unique_user,
+      creation_order=now.isoformat()[:19] + "|" + unique_user,
       uri=uri,
       q_type=False,
       topic=topic,
     )
     q.put()
     return q.key
-  except db.Error:
-    return None 
-  
+  except:
+    return None
+
 def del_quote(quote_id, user):
   """
   Remove a quote.
@@ -210,7 +210,7 @@ def get_quotes_newest(offset=None):
   if offset is None:
     quotes = Quote.query(Quote.q_type == False).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   else:
-    quotes = Quote.query(db.AND(Quote.creation_order <= offset, Quote.q_type == False)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, Quote.creation_order <= offset)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
     
   if len(quotes) > PAGE_SIZE:
     extra = quotes[-1].creation_order
@@ -233,11 +233,11 @@ def get_quotes_by_topic(offset=None, topic=None):
   if topic is None and offset is None:
     quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == None)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   elif topic is None and offset is not None:
-    quotes = Quote.query(db.AND(Quote.creation_order <= offset, Quote.q_type == False, Quote.topic == None)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == None, Quote.creation_order <= offset)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   elif topic is not None and offset is None:
     quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == topic)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
   else:
-    quotes = Quote.query(db.AND(Quote.creation_order <= offset, Quote.q_type == False, topic == topic)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
+    quotes = Quote.query(db.AND(Quote.q_type == False, topic == topic, Quote.creation_order <= offset)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
 
   if len(quotes) > PAGE_SIZE:
     extra = quotes[-1].creation_order
@@ -260,7 +260,7 @@ def set_vote(quote_id, user, newvote):
       return
     vote = Vote.get_by_id(id=user.email(), parent=quote.key)
     if vote is None:
-      vote = Vote(key_name = user.email(), parent=quote.key)
+      vote = Vote(id=user.email(), parent=quote.key)
     if vote.vote == newvote:
       return 
     quote.votesum = quote.votesum - vote.vote + newvote
@@ -288,7 +288,7 @@ def get_quotes(page=0, topic=None):
   assert page < 20
   extra = None
   if topic is None or topic == '' or topic.lower() == 'general':
-    quotes = Quote.query(Quote.topic.IN([None, '', 'General'])).order(-Quote.rank).fetch(PAGE_SIZE+1)
+    quotes = Quote.query(db.OR(Quote.topic == None, Quote.topic == '', Quote.topic == 'General')).order(-Quote.rank).fetch(PAGE_SIZE+1)
   else:
     quotes = Quote.query(Quote.topic == topic).order(-Quote.rank).fetch(PAGE_SIZE+1)
 
