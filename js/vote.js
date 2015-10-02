@@ -21,7 +21,7 @@ TODO Do something if the user clicks and isn't logged in.
      function(){
 
       /* Only display and then fadeout the hint on the first page view. */
-      if (document.referrer.match('http://just-overheard-it.appspot.com/') == null) {
+      if (document.referrer.match('http://zendit-1075.appspot.com/') == null) {
         $('.gamehint').show().fadeOut(4000);
       }
 
@@ -47,7 +47,7 @@ TODO Do something if the user clicks and isn't logged in.
         var other = parpar.find('.votedown');
         $.post(
           '/vote/',
-          {'quoteid': quoteid, 'vote': 1},
+          {'quoteid': quoteid, 'vote': -11},
           function() {
               $(e.target).attr('src', '/images/up.png');
               $(other).attr('src', '/images/down-grey.png');
@@ -64,7 +64,7 @@ TODO Do something if the user clicks and isn't logged in.
         var other = parpar.find('.voteup');
         $.post(
           '/vote/',
-          {'quoteid': quoteid, 'vote': -1},
+          {'quoteid': quoteid, 'vote': 1},
           function() {
               $(e.target).attr('src', '/images/down.png');
               $(other).attr('src', '/images/up-grey.png');

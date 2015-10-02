@@ -46,6 +46,8 @@ class Quote(db.Model):
   created = db.IntegerProperty(default=0)
   creation_order = db.StringProperty(default=" ")
   votesum = db.IntegerProperty(default=0)
+  up_votes = db.IntegerProperty(default=0)
+  down_votes = db.IntegerProperty(default=0)
   creator = db.UserProperty()
   q_type = db.BooleanProperty(default=False) # true if is comment
   topic = db.StringProperty(default="General")
@@ -255,12 +257,17 @@ def set_vote(quote_id, user, newvote):
   
   def txn():
     quote = Quote.get_by_id(quote_id)
+    if quote is None:
+      return
     vote = Vote.get_by_key_name(key_names = user.email(), parent = quote)
     if vote is None:
       vote = Vote(key_name = user.email(), parent = quote)
     if vote.vote == newvote:
       return 
     quote.votesum = quote.votesum - vote.vote + newvote
+    quote.up_votes += 1 if vote.vote == 1 else 0
+    quote.down_votes += 1 if vote.vote == -1 else 0
+
     vote.vote = newvote
     # See the docstring of main.py for an explanation of
     # the following formula.
@@ -272,6 +279,7 @@ def set_vote(quote_id, user, newvote):
     memcache.set("vote|" + user.email() + "|" + str(quote_id), vote.vote)
 
   db.run_in_transaction(txn)
+  # db.run_in_transaction_options(db.create_transaction_options(xg=True), txn)
   _set_progress_hasVoted(user)
 
   
@@ -281,8 +289,8 @@ def get_quotes(page=0, topic=None):
   assert page < 20
   extra = None
   if topic is None or topic == '' or topic.lower() == 'general':
-    quotes = Quote.gql('WHERE topic = NULL ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
-    quotes += Quote.gql('WHERE topic = \'\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    # quotes = Quote.gql('WHERE topic = NULL ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
+    quotes = Quote.gql('WHERE topic = \'\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
     quotes += Quote.gql('WHERE topic = \'General\' ORDER BY rank DESC').fetch(PAGE_SIZE+1, page*PAGE_SIZE)
   else:
     quotes = Quote.gql('WHERE topic = :1 ORDER BY rank DESC', topic).fetch(PAGE_SIZE+1, page*PAGE_SIZE)
