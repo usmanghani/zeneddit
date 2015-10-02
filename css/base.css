@@ -1,0 +1,45 @@
+      * { 
+        margin: 0; 
+        padding: 0; 
+        line-height: 1.1em;
+        font-family: Helvetica, FreeSans, Arial, 'Bitstream Vera Sans', sans-serif;
+        text-decoration: none;
+      }
+      .login { text-align: right; clear: both; color: black; padding-top: 0.2em; background-color: #f4f4f4;}
+
+      h1 { display: inline; font-size: 16pt;}
+
+     /* h1 a { color: white } */
+      h2 { padding-left: 1em }
+
+      .main-section { background-color: #f4f4f4; }
+
+      .titlebar {color: black; background: #f6921e; padding: 0.5em 0.5em 0 0.5em; }
+      
+      .tidbit a { color: black }
+
+      .tabs { padding-top: 0.8em; }
+
+      .logo { height: 30px; position: absolute; right:0px;}
+
+      .submit_tidbit { margin: 2em; background-color: #f4f4f4;}
+      .submit_tidbit p { padding: 0.2em; background-color: #f4f4f4;}
+      .votecontrols { float: left }
+      .quoteid { display:none }
+      .del { padding-right: 1em }
+      .error { color: red; font-weight: bold }
+      .gamehint { display: none; background: yellow; color: black; }
+      .next { padding-left: 3em; padding-top: 1em; background-color: #f4f4f4;}
+      
+      .nav { margin-left: 0.5em; margin-right: -0.2em; }
+      .nav a { padding: 0.4em; border: #f4f4f4 2px; background-color: #f4f4f4}
+
+      .{{ section }} a { color: black;}
+
+      .voteup, .votedown { vertical-align: middle; cursor: pointer }
+      .index { padding-right: 0.5em; }
+      .quote { width: 100%; padding: 0.5em }
+      .quoteinfo { padding: 1em; padding-left: 2em; }
+      .quoteinfo th { text-align: right }
+      .quoteinfo th, .quoteinfo td { padding: 0.4em }
+      .loginwarning { font-weight: bold; background: yellow; display: none; padding-left: 2em; } 
