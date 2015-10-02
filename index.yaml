@@ -12,14 +12,12 @@ indexes:
 
 - kind: Quote
   properties:
-  - name: topic
   - name: q_type
   - name: creation_order
     direction: desc
 
 - kind: Quote
   properties:
-  - name: q_type
   - name: topic
   - name: creation_order
     direction: desc
@@ -31,14 +29,18 @@ indexes:
     direction: desc
 
 - kind: Quote
-  ancestor: yes
   properties:
   - name: q_type
   - name: creation_order
     direction: desc
 
 - kind: Quote
-  ancestor: yes
+  properties:
+  - name: rank
+  - name: creation_order
+    direction: desc
+
+- kind: Quote
   properties:
   - name: topic
   - name: rank
