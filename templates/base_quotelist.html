@@ -9,20 +9,20 @@
 		<td>
             {% ifequal quote.voted 1 %}
             {#				<img src="/images/up.png" class="voteup"/>#}
-			<a href="#" class="votedown">&#x2206; ({{ quote.up_votes }})</a>
+			<a href="#" class="votedown">&#x2206; <span>({{ quote.up_votes }})</span></a>
             {% else %}
             {#				<img src="/images/up-grey.png" class="voteup"/>#}
-			<a href="#" class="votedown">&#x2206; ({{ quote.up_votes }})</a>
+			<a href="#" class="votedown">&#x2206; <span>({{ quote.up_votes }})</span></a>
             {% endifequal %}
 		</td>
 
 		<td>
             {% ifequal quote.voted -1 %}
                 {#				<img src="/images/down.png" class="votedown">#}
-				<a href="#" class="votedown">&#x2207; ({{ quote.down_votes }})</a>
+				<a href="#" class="votedown">&#x2207; <span>({{ quote.down_votes }})</span> </a>
                 {% else %}
                 {#				<img src="/images/down-grey.png" class="votedown">#}
-				<a href="#" class="votedown">&#x2207; ({{ quote.down_votes }})</a>
+				<a href="#" class="votedown">&#x2207; <span>({{ quote.down_votes }})</span></a>
             {% endifequal %}
 		</td>
 
@@ -30,13 +30,13 @@
             {% if quote.uri %}
 				<a href="{{ quote.uri|escape }}"><span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
 
-				</a><sub><a href="/r/{{ quote.topic|escape }}"><span
-						class="quoteid">{{ quote.id }}</span> /r/{{ quote.topic|escape }}
+				</a><sub><a href="/z/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> /z/{{ quote.topic|escape }}
 				</a></sub><br>
             {% else %}
 				<span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
-	            <sub><a href="/r/{{ quote.topic|escape }}"><span
-						class="quoteid">{{ quote.id }}</span> /r/{{ quote.topic|escape }}
+	            <sub><a href="/z/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> /z/{{ quote.topic|escape }}
 				</a></sub><br>
             {% endif %}
 		</td>
@@ -44,7 +44,7 @@
 {#		<td class="quote">#}
 {##}
 {#            {% ifnotequal quote.topic None %}#}
-{#				<a href="/r/{{ quote.topic|escape }}"><span#}
+{#				<a href="/z/{{ quote.topic|escape }}"><span#}
 {#						class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}#}
 {#				</a><br>#}
                 {#            {% else %}#}
