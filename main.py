@@ -1,60 +1,3 @@
-"""Zeneddit
-
-Demonstrates:
-   * Paging   - both using fetch() and by a unique index
-   * Decay    - Having older quotes fall from view over time without background processes
-   * Sharding - Using per user count shards to create unique a unique index
-   * Memcache
-
-Decay:
-  The underlying assumption in this design is that there are at 
-  best a couple thousand votes per quote over the course of a day or two. 
-  Votes will be created with the Quote they are about as their parent. 
-  As new votes are added the rank and votesum for the parent Quote are updated.
-
-  We don't have background tasks that can go back and adjust the current rankings 
-  of quotes over time, so we need a way to rank quotes that puts fresher quotes 
-  higher in the ranking in a scalable way that will work for a long period of time.
-
-  The ranking algorithm will make use of integer properties being 64-bits. The 
-  rank for each quote is calculated as:
-
-     rank = created * DAY_SCALE + votesum
-
-  created    = Number of days after 10/1/2008 that the quote created.
-  DAY_SCALE  = This is a constant that determines how quickly votes 
-               should decay (defaults to 4).
-  votesum    = Sum of all +1 and -1 votes for a quote.
-
-  Does this work? Presume the following scenario:
-
-  Day 1 -  [quote 0 and 1 are added on Day 1 and
-                get 5 and 3 votes respectively. Rank is q0, q1.]
-                
-   q0 (5) = 1 * 4 * 5 = 20
-   q1 (3) = 1 * 4 * 3 = 12
-
-  Day 2 -  [quote 0 and 1 get 3 and 0 more votes
-              respectively. quote 2 is added and gets 3 votes. Rank is now q0, q2, q1]
-              
-   q0 (5) + (3) = 1 * 4 * 8 = 32
-   q1 (3) + (0) = 1 * 4 * 3 = 12
-   q2       (3) = 2 * 4 * 3 = 24
-
-  Day 3 - [quote 2 gets one more vote. quote 3 is added and gets 5 votes.
-             Rank is q3, q0, q2, q1]
-             
-   q0 (5) + (3)       = 1 * 4 * 8 = 32
-   q1 (3) + (0)       = 1 * 4 * 3 = 12
-   q2       (3) + (1) = 2 * 4 * 4 = 32
-   q3             (5) = 3 * 4 * 5 = 60      
-
-  Note that ties are possible, which means that rank for quotes will have 
-  to be disambiguated since the application allows paging of ranked quotes.
-
-   
-"""
-
 import cgi
 import logging
 import os
@@ -64,35 +7,27 @@ from google.appengine.api import users
 from google.appengine.ext.webapp import template
 import models
 import wsgiref.handlers
+import urllib
+import urllib2
+import json
+
+def get_login_url(default=True):
+  if default:
+    return cgi.escape(users.create_login_url("/"))
+  else:
+    return ("https://secure.zenefits.com/oauth2/login/?next=" +
+            urllib.quote("/oauth2/authorize/?client_id=CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh&state=random_state_string&response_type=code&scope=read&redirect_uri=http://localhost:8080/oauth_callback"))
 
 def get_greeting():
-  """
-  Generate HTML for the user to either logout or login,
-  depending on their current state. Also returns progress_id and 
-  progress_msg.
-  
-  progress_id - The number of the image to display
-    that shows how many stars the user has earned
-    for participating with the site. This is actually 
-    a bit field with the first four bits being:
-    
-    Bit - Value - Description
-    0   -   1   - Showing up
-    1   -   2   - Logging in
-    2   -   4   - Voting on at least one quote
-    3   -   8   - Contributing at least one quote
-  
-  return: (greeting, progress_id, progress_msg)
-  """
   user = users.get_current_user()
   progress_id = 1
-  progress_msg = 'You get one star just for showing up.'
+  progress_msg = 'You get karma just for showing up.'
   if user:
     voter = models._get_or_create_voter(user)
     greeting = ('%s (%d) (<a class="loggedin" href="%s">sign out</a>)' %
         (user.nickname(), voter.karma, cgi.escape(users.create_logout_url('/'))))
     progress_id = 3
-    progress_msg = 'One more star for logging in.'
+    progress_msg = 'More karma for logging in.'
     has_voted, has_added_quote = models.get_progress(user)    
     if has_voted:
       progress_id |= 4
@@ -101,22 +36,11 @@ def get_greeting():
       progress_id |= 8
       progress_msg = ""      
   else:
-    greeting = (u"<a  href=\"%s\">Sign in to vote or add your own quote</a>." % cgi.escape(users.create_login_url("/")))
-    logging.info(greeting)
+    greeting = (u"<a  href=\"%s\">Sign in to vote or add your own quote</a>." % get_login_url(default=False))
   return (progress_id, progress_msg, greeting)
 
 
 def quote_for_template(quotes, user, page=0):
-  """Convert a Quote object into a suitable dictionary for 
-  a template. Does some processing on parameters and adds
-  an index for paging.
-  
-  Args
-    quotes:  A list of Quote objects.
-  
-  Returns
-    A list of dictionaries, one per Quote object.
-  """
   quotes_tpl = []
   index = 1 + page * models.PAGE_SIZE
   for quote in quotes:
@@ -139,21 +63,6 @@ def quote_for_template(quotes, user, page=0):
   return quotes_tpl
 
 def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page=0, comments=[]):
-  """Bundle up all the values and generate a dictionary that can be used to 
-  instantiate a base + base_quotelist template.
-
-  Args
-    user:     The logged in user object
-    quotes:   List of Quote objects
-    section:  The name of the section, either Popular or Recent.
-    nexturi:  If paging, the URI of the next page, otherwise None.
-    prevuri:  If paging, the URI of the previous page, otherwise None.
-    page:     The number of the page we are displaying, used to offset the indices.
-
-  Returns
-    A dictionary 
-  
-  """
   progress_id, progress_msg, greeting = get_greeting()
   template_values  = {
      'progress_id': progress_id,
@@ -172,8 +81,6 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
 
 
 class MainHandler(webapp2.RequestHandler):
-  """Handles the main page and adding new quotes."""
-
   def get(self):
     return self._get_impl(topic=None)
 
@@ -312,14 +219,10 @@ class CreateSubZennitHandler(MainHandler):
 
 
 class TopicHandler(MainHandler):
-  """Handles the main page and adding new quotes."""
-
   def get(self, topic):
     return super(TopicHandler, self)._get_impl(topic=topic)
 
 class VoteHandler (webapp2.RequestHandler):
-  """Handles AJAX vote requests."""
-
   def post(self):
     """Add or change a vote for a user."""
     user = users.get_current_user()
@@ -336,8 +239,6 @@ class VoteHandler (webapp2.RequestHandler):
 
 
 class RecentHandler(webapp2.RequestHandler):
-  """Handles the list of quotes ordered in reverse chronological order."""
-
   def get(self):
     """Retrieve an HTML page of the most recently added quotes."""
     user = users.get_current_user()
@@ -358,8 +259,6 @@ class RecentHandler(webapp2.RequestHandler):
 
 
 class FeedHandler(webapp2.RequestHandler):
-  """Handles the list of quotes ordered in reverse chronological order."""
-
   def get(self, section):
     """Retrieve a feed"""
     user = None
@@ -377,8 +276,6 @@ class FeedHandler(webapp2.RequestHandler):
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
 class QuoteHandler (webapp2.RequestHandler):
-  """Handles requests for a single quote, such as a vote, or a permalink page"""
-  
   def post(self, quoteid):
     # """Delete a quote."""
     user = users.get_current_user()
@@ -403,6 +300,29 @@ class TrendingHandler(webapp2.RequestHandler):
   def get(self):
     return self.response.out.write(unicode(models.get_trending_topics()))
 
+class OAuthHandler(webapp2.RequestHandler):
+  def get(self):
+    code = self.request.get('code')
+    if code is not None:
+      req = urllib2.Request('https://secure.zenefits.com/oauth2/token/', data=urllib.urlencode({
+          'grant_type': 'authorization_code',
+          'client_id': 'CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh',
+          'client_secret': 'fDdLLsSF6gazcogc11XpsXaxoG6YXp8tvIPxkUqFC1aJwgrGLjtNF4RPoRzieZmdA9Wz3vTSuGJySVNNVFKC8bPYO2o03ETupaLkkd2AWjn3VWBjp8V0jA08ijPSFPuN',
+          'redirect_uri': 'http://localhost:8080/oauth_callback',
+          'code': code
+      }))
+      response = urllib2.urlopen(req)
+      response_data = response.read()
+      json_data = json.loads(response_data)
+      access_token = json_data['access_token']
+      req = urllib2.Request('https://secure.zenefits.com/oauth2/me/', headers={'Authorization': 'Bearer ' + access_token})
+      response = urllib2.urlopen(req)
+      response_data = response.read()
+      json_data = json.loads(response_data)
+      self.response.out.write(unicode("I AM HAPPPPY!" + access_token + " == " + json.dumps(json_data)))
+    else:
+      self.response.out.write(unicode("I AM SAD!"))
+
 application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
@@ -415,6 +335,7 @@ application = webapp2.WSGIApplication(
         ('/feed/(recent|popular)/', FeedHandler),
         ('/z/(.*)', TopicHandler),
         ('/trending', TrendingHandler),
+        ('/oauth_callback', OAuthHandler),
     ], debug=True)
 
 def main():

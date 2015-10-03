@@ -1,27 +1,5 @@
-# Copyright 2008 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-"""Model classes and utility functions for handling
-Quotes, Votes and Voters in the Overheard application.
-
-"""
-
-
 import datetime
 import hashlib
-import logging
 
 from google.appengine.ext import ndb as db
 from google.appengine.api import memcache
@@ -31,23 +9,12 @@ PAGE_SIZE = 20
 DAY_SCALE = 4
 
 class Counter(db.Model):
-  """ id is the name of the counter """
   counter = db.IntegerProperty()
 
 class Quote(db.Model):
-  """Storage for a single quote and its metadata
-  
-  Properties
-    quote:          The quote as a string
-    uri:            An optional URI that is the source of the quotation
-    rank:           A calculated ranking based on the number of votes and when the quote was added.
-    created:        When the quote was created, recorded in the number of days since the beginning of our local epoch.
-    creation_order: Totally unique index on all quotes in order of their creation.
-    creator:        The user that added this quote.
-  """
   quote = db.StringProperty(required=True)
   uri   = db.StringProperty()
-  rank = db.StringProperty()
+  rank = db.IntegerProperty(indexed=True)
   created = db.IntegerProperty(default=0)
   creation_order = db.StringProperty(default=" ")
   votesum = db.IntegerProperty(default=0)
@@ -57,36 +24,11 @@ class Quote(db.Model):
   q_type = db.BooleanProperty(default=False) # true if is comment
   topic = db.StringProperty(default="General")
 
-# class Comment(db.Model):
-#   text = db.StringProperty(required=True, multiline=True)
-#   quote_id = db.IntegerProperty(required=True)
-#   # parent_comment_id = db.IntegerProperty(required=False)
-#   user = db.UserProperty(required=True)
-#   created = db.IntegerProperty(required=True)
-
 class Vote(db.Model):
-  """Storage for a single vote by a single user on a single quote.
-  
-
-  Index
-    key_name: The email address of the user that voted.
-    parent:   The quote this is a vote for.
-  
-  Properties
-    vote: The value of 1 for like, -1 for dislike.
-  """
   vote = db.IntegerProperty(default=0)
 
 
 class Voter(db.Model):
-  """Storage for metadata about each user
-  
-  Properties
-    count:          An integer that gets incremented with users addition of a quote. 
-                      Used to build a unique index for quote creation.
-    hasVoted:       Has this user ever voted on a quote.
-    hasAddedQuote:  Has this user ever added a quote.
-  """
   count = db.IntegerProperty(default=0)
   hasVoted = db.BooleanProperty(default=False)
   hasAddedQuote = db.BooleanProperty(default=False)
@@ -156,19 +98,6 @@ def _unique_user(user, transact=True):
   
 
 def add_quote(text, user, uri=None, _created=None, topic=None):
-  """
-  Add a new quote to the datastore.
-  
-  Parameters
-    text:     The text of the quote
-    user:     User who is adding the quote
-    uri:      Optional URI pointing to the origin of the quote.
-    _created: Allows the caller to override the calculated created 
-                value, used only for testing.
-  
-  Returns  
-    The id of the quote or None if the add failed.
-  """
   def txn():
     try:
       now = datetime.datetime.now()
@@ -206,34 +135,16 @@ def add_quote(text, user, uri=None, _created=None, topic=None):
   return db.transaction(txn, xg=True)
 
 def del_quote(quote_id, user):
-  """
-  Remove a quote.
-  
-  User must be the creator of the quote or a site administrator.
-  """
   q = Quote.get_by_id(quote_id)
   if q is not None and (users.is_current_user_admin() or q.creator == user):
     q.delete()
 
 
 def get_quote(quote_id):
-  """
-  Retrieve a single quote.
-  """
   return db.Key(urlsafe=quote_id).get()
 
 
 def get_quotes_newest(offset=None):
-  """
-  Returns 10 quotes per page in created order.
-  
-  Args 
-    offset:  The id to use to start the page at. This is the value of 'extra'
-               returned from a previous call to this function.
-    
-  Returns
-    (quotes, extra)
-  """
   extra = None
   if offset is None:
     quotes = Quote.query(Quote.q_type == False).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
@@ -247,16 +158,6 @@ def get_quotes_newest(offset=None):
 
 
 def get_quotes_by_topic(offset=None, topic=None):
-  """
-  Returns 10 quotes per page in created order.
-
-  Args
-    offset:  The id to use to start the page at. This is the value of 'extra'
-               returned from a previous call to this function.
-
-  Returns
-    (quotes, extra)
-  """
   extra = None
   if topic is None and offset is None:
     quotes = Quote.query(db.AND(Quote.q_type == False, Quote.topic == None)).order(-Quote.creation_order).fetch(PAGE_SIZE + 1)
@@ -280,7 +181,6 @@ def rank_quote(ups, downs, date):
   epoch = datetime(1970, 1, 1)
 
   def epoch_seconds(date):
-      """Returns the number of seconds from the epoch to date."""
       td = date - epoch
       return td.days * 86400 + td.seconds + (float(td.microseconds) / 1000000)
 
@@ -288,7 +188,6 @@ def rank_quote(ups, downs, date):
       return ups - downs
 
   def hot(ups, downs, date):
-      """The hot formula. Should match the equivalent function in postgres."""
       s = score(ups, downs)
       order = log(max(abs(s), 1), 10)
       sign = 1 if s > 0 else -1 if s < 0 else 0
@@ -298,10 +197,6 @@ def rank_quote(ups, downs, date):
   return hot(ups, downs, date)
 
 def set_vote(quote_id, user, newvote):
-  """
-  Record 'user' casting a 'vote' for a quote with an id of 'quote_id'.
-  The 'newvote' is usually an integer in [-1, 0, 1].
-  """
   if user is None:
     return
   
@@ -344,7 +239,6 @@ def set_vote(quote_id, user, newvote):
 
   
 def get_quotes(page=0, topic=None):
-  """Returns PAGE_SIZE quotes per page in rank order. Limit to 20 pages."""
   assert page >= 0
   assert page < 20
   extra = None
@@ -361,7 +255,6 @@ def get_quotes(page=0, topic=None):
 
 
 def voted(quote, user):
-  """Returns the value of a users vote on the specified quote, a value in [-1, 0, 1]."""
   val = 0
   if user:
     memcachekey = "vote|" + user.email() + "|" + str(quote.key)
