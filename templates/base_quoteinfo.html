@@ -25,7 +25,7 @@
 				<ul>
                     {% for comment in comments %}
 						<li>
-                            {{ comment.quote }}  &#x2206; ({{ comment.up_votes }}) &#x2207; ({{ comment.down_votes }})
+                            {{ comment.quote }}
 						</li>
                     {% endfor %}
 				</ul>
@@ -36,7 +36,7 @@
 			<td>
                 {% if loggedin %}
 					<div>
-						<form action="/quote/{{ quote.id }}" method="post">
+						<form action="/post/{{ quote.id }}" method="post">
 							<p><label class="new-comment-label">New Comment: <br> <textarea name="newcomment" rows="12"
 							                                      cols="40"></textarea></label></p>
 

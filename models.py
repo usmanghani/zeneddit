@@ -346,4 +346,4 @@ def comment_on_quote(quote, user, comment_text):
 
 
 def get_trending_topics():
-	return [t.key.id() for t in Counter.query().order(-Counter.counter).fetch(10)]
+	return [t.key.id() for t in Counter.query().order(-Counter.counter).fetch(20)]

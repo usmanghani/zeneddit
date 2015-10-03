@@ -166,6 +166,10 @@ label
     background-color: orange;
 }
 
+span.active {
+    background-color: orange;
+}
+
 .top-tabs .nav a {
     color: black;
 }

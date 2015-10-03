@@ -331,9 +331,7 @@ class OAuthHandler(webapp2.RequestHandler):
       response_data = response.read()
       json_data = json.loads(response_data)
       logging.info(json_data['email'])
-      #self.response.out.write(unicode("I AM HAPPPPY!" + access_token + " == " + json.dumps(json_data)))
       self.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % ('u_id', str(json_data['email'])))
-
       self.redirect('/')
     else:
       self.response.out.write(unicode("I AM SAD!"))
@@ -347,7 +345,7 @@ application = webapp2.WSGIApplication(
         ('/create', CreateSubZennitHandler),
         ('/vote/', VoteHandler),
         ('/recent/', RecentHandler),
-        ('/quote/(.*)', QuoteHandler),
+        ('/post/(.*)', QuoteHandler),
         ('/feed/(recent|popular)/', FeedHandler),
         ('/z/(.*)', TopicHandler),
         ('/trending', TrendingHandler),

@@ -17,11 +17,11 @@
 <body>
 
 <div class="titlebar">
-  <img src="/images/logo3.png" alt="Zenefits" class="logo">
+  <a href="/"><img src="/images/logo3.png" alt="Zenefits" class="logo"></a>
 
   <div class="tabs top-tabs">
-    <span class="nav Popular"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
-    <span class="nav Recent"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span>
+    <span class="nav Popular {% if section == 'Popular' %}active{% endif %}"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
+    <span class="nav Recent {% if section == 'Recent' %}active{% endif %}"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span>
   </div>
 	<!--<img src="/images/icon.png" alt="Zenefits" class="logo">-->
 

@@ -28,7 +28,7 @@
 		<td class="quote">
             {% if quote.uri %}
 				<a href="{{ quote.uri|escape }}"><span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
-					<small>(<a href="/quote/{{ quote.id }}"><b>comments</b></a>)</small>
+					<small>(<a href="/post/{{ quote.id }}"><b>comments</b></a>)</small>
 					<br>
 				</a><sub>
 				<small><a href="/z/{{ quote.topic|escape }}"><span
@@ -37,7 +37,7 @@
 			</sub><br>
             {% else %}
 				<span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
-				<small>(<a href="/quote/{{ quote.id }}"><b>comments</b></a>)</small>
+				<small>(<a href="/post/{{ quote.id }}"><b>comments</b></a>)</small>
 				<br>
 				<sub>
 					<small><a href="/z/{{ quote.topic|escape }}"><span
