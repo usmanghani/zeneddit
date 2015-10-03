@@ -64,8 +64,9 @@ tr.tidbit:hover
 {
     display: flex;
     /*padding: 0.2em; */
-
-    background-color: #E8E8E8;
+    vertical-align: top;
+    display: inline-block;
+    background-color: white;
     /*  justify-content: space-around; */
 }
 
