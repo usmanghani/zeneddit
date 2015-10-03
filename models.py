@@ -279,11 +279,13 @@ def set_vote(quote_id, user, newvote, is_url_safe=True):
 			quote = quote_id.get()
 		if quote is None:
 			return
-		creator = quote.creator.get()
-		if creator.useremail != user.useremail:
+
+		creator = quote.creator.get() if quote is not None and quote.creator is not None else None
+		if creator is None or creator.useremail != user.useremail:
 			voter.karma += 1
-			creator_voter = _get_or_create_voter(quote.creator.get())
-			creator_voter.karma += newvote
+			if creator is not None:
+				creator_voter = _get_or_create_voter(quote.creator.get())
+				creator_voter.karma += newvote
 
 		vote = Vote.get_by_id(id=user.useremail, parent=quote.key)
 		if vote is None:
