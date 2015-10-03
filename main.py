@@ -35,7 +35,7 @@ def get_greeting(user):
       progress_id |= 8
       progress_msg = ""      
   else:
-    greeting = (u"<a  href=\"%s\">Sign in to vote or add your own quote</a>." % get_login_url(default=False))
+    greeting = (u"<a  href=\"%s\">Sign in to create or vote</a>." % get_login_url(default=False))
   return (progress_id, progress_msg, greeting)
 
 
