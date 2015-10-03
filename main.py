@@ -10,6 +10,7 @@ import wsgiref.handlers
 import urllib
 import urllib2
 import json
+import secure
 
 def get_login_url(default=True):
   if default:
@@ -18,14 +19,15 @@ def get_login_url(default=True):
     return ("https://secure.zenefits.com/oauth2/login/?next=" +
             urllib.quote("/oauth2/authorize/?client_id=CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh&state=random_state_string&response_type=code&scope=read&redirect_uri=" + os.environ['REDIRECT_URL']))
 
-def get_greeting():
-  user = users.get_current_user()
+def get_greeting(user):
+  #user = users.get_current_user()
+
   progress_id = 1
   progress_msg = 'You get karma just for showing up.'
   if user:
     voter = models._get_or_create_voter(user)
     greeting = ('%s (%d) (<a class="loggedin" href="%s">sign out</a>)' %
-        (user.nickname(), voter.karma, cgi.escape(users.create_logout_url('/'))))
+        (user, voter.karma, cgi.escape(('/logout'))))
     progress_id = 3
     progress_msg = 'More karma for logging in.'
     has_voted, has_added_quote = models.get_progress(user)    
@@ -63,7 +65,7 @@ def quote_for_template(quotes, user, page=0):
   return quotes_tpl
 
 def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page=0, comments=[]):
-  progress_id, progress_msg, greeting = get_greeting()
+  progress_id, progress_msg, greeting = get_greeting(user)
   template_values  = {
      'progress_id': progress_id,
      'progress_msg': progress_msg,
@@ -79,6 +81,42 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
   
   return template_values
 
+  #This function sets a secure cookie (using hashing method created above) 
+  #for the name and value that are passed to this function; Setting the cookie is needed
+  #to complete the login
+def set_secure_cookie(name, val):
+  cookie_val = secure.make_secure_val(val)
+  webapp2.RequestHandler.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name, cookie_val))
+
+  #This function reads unsecure cookie
+def read_unsecure_cookie(self, name):
+  cookie_val = self.request.cookies.get(name)
+  return cookie_val
+
+  #This function checks if the cookies are untampered then returns true, if an already loggged
+  #in user comes back to the page;
+def read_secure_cookie(name):
+  cookie_val = webapp2.RequestHandler.request.cookies.get(name)
+  return cookie_val and secure.check_secure_val(cookie_val)
+
+
+  #This function deletes the u_id cookie; Cookie deletion = logout
+
+class Logout(webapp2.RequestHandler):
+  def get(self):
+    self.response.headers.add_header('Set-Cookie', 'u_id=; Path=/')
+    self.redirect('/')
+
+def initialize(self, *a, **kw):
+  webapp2.RequestHandler.initialize(self, *a, **kw)
+  uid = self.read_secure_cookie('u_id')
+  if uid:
+  #print "USER", ndb.Key(urlsafe=uid).get()
+    self.user = uid and models.Users.by_id(str(uid).lower()) #Changed to lowercase
+  #print "SELF USER", self.user, str(self.user)
+  else:
+    self.user = None
+
 
 class MainHandler(webapp2.RequestHandler):
   def get(self):
@@ -87,7 +125,13 @@ class MainHandler(webapp2.RequestHandler):
   def _get_impl(self, topic):
     """The most popular quotes in order, broken into pages, 
        served as HTML."""
-    user = users.get_current_user()
+    #user = users.get_current_user()
+
+    cookie_val = self.request.cookies.get('u_id')
+    logging.info(cookie_val)
+    user = cookie_val
+    logging.info("COOOOKIEIEEEE")
+    
     page = int(self.request.get('p', '0'))
     quotes, next = models.get_quotes(page, topic)
     if next:
@@ -109,7 +153,11 @@ class MainHandler(webapp2.RequestHandler):
     
   def post(self):
     """Add a quote to the system."""
-    user = users.get_current_user()
+    cookie_val = self.request.cookies.get('u_id')
+    logging.info(cookie_val)
+    user = cookie_val
+    logging.info("COOOOKIEIEEEE")
+
     text = self.request.get('newtidbit').strip()
     if len(text) > 500:
       text = text[:500]
@@ -120,7 +168,7 @@ class MainHandler(webapp2.RequestHandler):
     topic = self.request.get('tidbittopic').strip()
     parsed_uri = urlparse.urlparse(uri)
 
-    progress_id, progress_msg, greeting = get_greeting()      
+    progress_id, progress_msg, greeting = get_greeting(user)      
 
     if uri and ( not parsed_uri.scheme or not parsed_uri.netloc ):
       template_values  = {
@@ -158,10 +206,17 @@ class MainHandler(webapp2.RequestHandler):
           )    
         self.response.out.write(unicode(template.render(template_file, template_values)))
 
+
 class SubmitLinkPostHandler(MainHandler):
   """Handles Submissions"""
   def get(self):
-    user = users.get_current_user()
+    """Read user from cookie"""
+    cookie_val = self.request.cookies.get('u_id')
+    logging.info(cookie_val)
+    user = cookie_val
+    logging.info("COOOOKIEIEEEE")
+
+
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
     logging.info('Latest offset = %s' % offset)
@@ -180,7 +235,13 @@ class SubmitLinkPostHandler(MainHandler):
 class SubmitTextPostHandler(MainHandler):
   """Handles Submissions"""
   def get(self):
-    user = users.get_current_user()
+    """Read user from cookie"""
+    cookie_val = self.request.cookies.get('u_id')
+    logging.info(cookie_val)
+    user = cookie_val
+    logging.info("COOOOKIEIEEEE")
+
+
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
     logging.info('Latest offset = %s' % offset)
@@ -199,7 +260,13 @@ class SubmitTextPostHandler(MainHandler):
 class CreateSubZennitHandler(MainHandler):
   """Handles Submissions"""
   def get(self):
-    user = users.get_current_user()
+    """Read user from cookie"""
+    cookie_val = self.request.cookies.get('u_id')
+    logging.info(cookie_val)
+    user = cookie_val
+    logging.info("COOOOKIEIEEEE")
+
+
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
     logging.info('Latest offset = %s' % offset)
@@ -224,8 +291,15 @@ class TopicHandler(MainHandler):
 
 class VoteHandler (webapp2.RequestHandler):
   def post(self):
+    """Read user from cookie"""
+    cookie_val = self.request.cookies.get('u_id')
+    logging.info(cookie_val)
+    user = cookie_val
+    logging.info("COOOOKIEIEEEE")
+
+
     """Add or change a vote for a user."""
-    user = users.get_current_user()
+    
     if None == user:
       self.response.set_status(403, 'Forbidden')
       return
@@ -319,7 +393,11 @@ class OAuthHandler(webapp2.RequestHandler):
       response = urllib2.urlopen(req)
       response_data = response.read()
       json_data = json.loads(response_data)
-      self.response.out.write(unicode("I AM HAPPPPY!" + access_token + " == " + json.dumps(json_data)))
+      logging.info(json_data['email'])
+      #self.response.out.write(unicode("I AM HAPPPPY!" + access_token + " == " + json.dumps(json_data)))
+      self.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % ('u_id', str(json_data['email'])))
+
+      self.redirect('/')
     else:
       self.response.out.write(unicode("I AM SAD!"))
 
@@ -327,6 +405,7 @@ application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
         ('/submit', SubmitLinkPostHandler),
+        ('/logout', Logout),
         ('/submittext', SubmitTextPostHandler),
         ('/create', CreateSubZennitHandler),
         ('/vote/', VoteHandler),

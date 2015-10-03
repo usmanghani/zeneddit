@@ -24,6 +24,58 @@ class Quote(db.Model):
   q_type = db.BooleanProperty(default=False) # true if is comment
   topic = db.StringProperty(default="General")
 
+
+class Users(db.Model):
+  _use_memcache = False
+  """
+  Sets up the USER DATABASE for signed up users
+  """
+  useremail = db.StringProperty(required = True)
+  userfullname = db.StringProperty(required = True)
+  pw_hash = db.StringProperty(required = True)
+  datejoined = db.DateTimeProperty(auto_now_add = True)
+  last_modified = db.DateTimeProperty(auto_now = True)
+  user_karma = db.FloatProperty(default=1.0)
+  email_hash = db.ComputedProperty(lambda e: hashlib.md5(e.useremail).hexdigest())
+  user_type = db.StringProperty()
+  user_sub_zennits = db.TextProperty(default=None)
+
+  @classmethod
+  def by_id(cls, uid):
+    return cls.get_by_id(uid)
+
+  @classmethod
+  def by_name(cls, useremail):
+    u = cls.query().filter(cls.useremail == useremail).get()
+    return u
+
+  @classmethod
+  def by_stripe_id(cls, sid):
+    u = cls.query().filter(cls.stripeID == sid).get()
+    return u
+
+  @classmethod
+  def by_name_return_key_only(cls, useremail):
+    u = cls.query().filter(cls.useremail == useremail).get(keys_only=True)
+    return u
+
+  @classmethod
+  def register(cls, useremail, pw, fullname, user_type=""):
+    pw_hash = secure.make_pw_hash(useremail, pw)
+    return cls(userfullname = str(fullname),
+           useremail = str(useremail),
+           user_type = str(user_type),
+           pw_hash = str(pw_hash),
+           id = str(useremail)
+           )
+  
+  @classmethod
+  def login(cls, useremail):
+    u = useremail
+    if u:
+      return u
+
+
 class Vote(db.Model):
   vote = db.IntegerProperty(default=0)
 
@@ -42,9 +94,9 @@ def _get_or_create_voter(user):
   
   Returns a Voter for the given user.
   """
-  voter = Voter.get_by_id(id=user.email())
+  voter = Voter.get_by_id(id=user)
   if voter is None:
-    voter = Voter(id=user.email())
+    voter = Voter(id=user)
   return voter
 
 def _get_or_create_counter(topic):
@@ -94,7 +146,7 @@ def _unique_user(user, transact=True):
   else:
     count = txn()
 
-  return hashlib.md5(user.email() + "|" + str(count)).hexdigest()
+  return hashlib.md5(user + "|" + str(count)).hexdigest()
   
 
 def add_quote(text, user, uri=None, _created=None, topic=None):
@@ -213,9 +265,9 @@ def set_vote(quote_id, user, newvote):
     creator_voter = _get_or_create_voter(quote.creator)
     creator_voter.karma += newvote
 
-    vote = Vote.get_by_id(id=user.email(), parent=quote.key)
+    vote = Vote.get_by_id(id=user, parent=quote.key)
     if vote is None:
-      vote = Vote(id=user.email(), parent=quote.key)
+      vote = Vote(id=user, parent=quote.key)
     if vote.vote == newvote:
       return
 
@@ -232,7 +284,7 @@ def set_vote(quote_id, user, newvote):
     #   )
     quote.rank = rank_quote(quote.up_votes, quote.down_votes, datetime.datetime.now())
     db.put_multi([vote, quote, voter])
-    memcache.set("vote|" + user.email() + "|" + str(quote_id), vote.vote)
+    memcache.set("vote|" + user + "|" + str(quote_id), vote.vote)
 
   db.transaction(txn, xg=True)
   _set_progress_hasVoted(user)
@@ -257,11 +309,11 @@ def get_quotes(page=0, topic=None):
 def voted(quote, user):
   val = 0
   if user:
-    memcachekey = "vote|" + user.email() + "|" + str(quote.key)
+    memcachekey = "vote|" + user + "|" + str(quote.key)
     val = memcache.get(memcachekey)
     if val is not None:
       return val
-    vote = Vote.get_by_id(id=user.email(), parent=quote.key)
+    vote = Vote.get_by_id(id=user, parent=quote.key)
     if vote is not None:
       val = vote.vote
       memcache.set(memcachekey, val)
