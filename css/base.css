@@ -7,7 +7,8 @@
   text-decoration: none;
 }
 
-.login { text-align: right; clear: both; color: black; padding-top: 0.2em;}
+.login { text-align: right; clear: both; color: black; padding-top: 0.2em;
+    padding-right: 15px;  }
 
 .main-section { background-color: white; }
 
@@ -61,4 +62,13 @@ table {
 .quoteinfo { padding: 1em; padding-left: 2em; }
 .quoteinfo th { text-align: right }
 .quoteinfo th, .quoteinfo td { padding: 0.4em }
-.loginwarning { font-weight: bold; background: yellow; display: none; padding-left: 2em; } 
+.loginwarning { font-weight: bold; background: yellow; display: none; padding-left: 2em; }
+
+.submit, .create {
+    display: inline-block;
+}
+
+.submit:hover, .create:hover {
+    background-color: orange;
+}
+

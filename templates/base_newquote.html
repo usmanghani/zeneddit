@@ -1,9 +1,10 @@
 {% if loggedin %}
 	<div class="submit_tidbit">
 
-		<span class=""><a href="/submit">Link</a></span>
-		<span class=""><a href="/submittext">Text</a></span>
-
+		<div style="background-color: lightgray; color: white;">
+			<span style="background-color:orange; color:white;"><a style="color:white;" href="/submit">Link</a></span>
+			<span style="color:white;"><a style="color:white;" href="/submittext">Text</a></span>
+		</div>
 {#		<p class="tabs">#}
 {#		</p>#}
 
@@ -26,7 +27,7 @@
 
 			<p><label>Topic: <input type="text" name="tidbittopic" value=""></label></p>
 
-			<p><input type="submit" value="Add"/></p>
+			<p><input type="submit" value="Add" style="background-color: orange; border-style: none; height: 60px; width: 200px;"/></p>
 		</form>
 	</div>
 {% endif %}

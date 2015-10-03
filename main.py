@@ -10,7 +10,6 @@ import wsgiref.handlers
 import urllib
 import urllib2
 import json
-import secure
 
 def get_login_url(default=True):
   if default:
@@ -20,14 +19,12 @@ def get_login_url(default=True):
             urllib.quote("/oauth2/authorize/?client_id=CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh&state=random_state_string&response_type=code&scope=read&redirect_uri=" + os.environ['REDIRECT_URL']))
 
 def get_greeting(user):
-  #user = users.get_current_user()
-
   progress_id = 1
   progress_msg = 'You get karma just for showing up.'
   if user:
     voter = models._get_or_create_voter(user)
     greeting = ('%s (%d) (<a class="loggedin" href="%s">sign out</a>)' %
-        (user, voter.karma, cgi.escape(('/logout'))))
+        (user.useremail, voter.karma, cgi.escape(('/logout'))))
     progress_id = 3
     progress_msg = 'More karma for logging in.'
     has_voted, has_added_quote = models.get_progress(user)    
@@ -70,7 +67,7 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
      'progress_id': progress_id,
      'progress_msg': progress_msg,
      'greeting': greeting,
-     'loggedin': user,
+     'loggedin': user.useremail if user is not None else None,
      'quotes' : quote_for_template(quotes, user, page),
      'trending': models.get_trending_topics(),
      'section': section,
@@ -81,57 +78,18 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
   
   return template_values
 
-  #This function sets a secure cookie (using hashing method created above) 
-  #for the name and value that are passed to this function; Setting the cookie is needed
-  #to complete the login
-#def set_secure_cookie(name, val):
-#  cookie_val = secure.make_secure_val(val)
-#  webapp2.RequestHandler.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name, cookie_val))
-
-  #This function reads unsecure cookie
-#def read_unsecure_cookie(self, name):
-#  cookie_val = self.request.cookies.get(name)
-#  return cookie_val
-
-  #This function checks if the cookies are untampered then returns true, if an already loggged
-  #in user comes back to the page;
-#def read_secure_cookie(name):
-#  cookie_val = webapp2.RequestHandler.request.cookies.get(name)
-#  return cookie_val and secure.check_secure_val(cookie_val)
-
-
-  #This function deletes the u_id cookie; Cookie deletion = logout
-
-class Logout(webapp2.RequestHandler):
+class LogoutHandler(webapp2.RequestHandler):
   def get(self):
     self.response.headers.add_header('Set-Cookie', 'u_id=; Path=/')
     self.redirect('/')
-
-#def initialize(self, *a, **kw):
-#  webapp2.RequestHandler.initialize(self, *a, **kw)
-#  uid = self.read_secure_cookie('u_id')
-#  if uid:
-  #print "USER", ndb.Key(urlsafe=uid).get()
-#    self.user = uid and models.Users.by_id(str(uid).lower()) #Changed to lowercase
-  #print "SELF USER", self.user, str(self.user)
-#  else:
-#    self.user = None
-
 
 class MainHandler(webapp2.RequestHandler):
   def get(self):
     return self._get_impl(topic=None)
 
   def _get_impl(self, topic):
-    """The most popular quotes in order, broken into pages, 
-       served as HTML."""
-    #user = users.get_current_user()
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
 
-    cookie_val = self.request.cookies.get('u_id')
-    logging.info(cookie_val)
-    user = cookie_val
-    logging.info("COOKIEEEE")
-    
     page = int(self.request.get('p', '0'))
     quotes, next = models.get_quotes(page, topic)
     if next:
@@ -152,11 +110,7 @@ class MainHandler(webapp2.RequestHandler):
     self.response.out.write(unicode(template.render(template_file, template_values)))
     
   def post(self):
-    """Add a quote to the system."""
-    cookie_val = self.request.cookies.get('u_id')
-    logging.info(cookie_val)
-    user = cookie_val
-    logging.info("COOKIEEEE")
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
 
     text = self.request.get('newtidbit').strip()
     if len(text) > 500:
@@ -211,13 +165,8 @@ class MainHandler(webapp2.RequestHandler):
 
 
 class SubmitLinkPostHandler(MainHandler):
-  """Handles Submissions"""
   def get(self):
-    """Read user from cookie"""
-    cookie_val = self.request.cookies.get('u_id')
-    logging.info(cookie_val)
-    user = cookie_val
-    logging.info(user)
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
 
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
@@ -242,12 +191,7 @@ class SubmitLinkPostHandler(MainHandler):
 class SubmitTextPostHandler(MainHandler):
   """Handles Submissions"""
   def get(self):
-    """Read user from cookie"""
-    cookie_val = self.request.cookies.get('u_id')
-    logging.info(cookie_val)
-    user = cookie_val
-    logging.info("COOKIEEEE")
-
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
 
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
@@ -265,14 +209,8 @@ class SubmitTextPostHandler(MainHandler):
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
 class CreateSubZennitHandler(MainHandler):
-  """Handles Submissions"""
   def get(self):
-    """Read user from cookie"""
-    cookie_val = self.request.cookies.get('u_id')
-    logging.info(cookie_val)
-    user = cookie_val
-    logging.info("COOKIEEEE")
-
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
 
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
@@ -296,16 +234,8 @@ class TopicHandler(MainHandler):
 
 class VoteHandler (webapp2.RequestHandler):
   def post(self):
-    """Read user from cookie"""
-    cookie_val = self.request.cookies.get('u_id')
-    logging.info(cookie_val)
-    user = cookie_val
-    logging.info("COOKIEEEE")
-
-
-    """Add or change a vote for a user."""
-    
-    if None == user:
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
+    if user is None:
       self.response.set_status(403, 'Forbidden')
       return
     quoteid = self.request.get('quoteid')
@@ -319,8 +249,8 @@ class VoteHandler (webapp2.RequestHandler):
 
 class RecentHandler(webapp2.RequestHandler):
   def get(self):
-    """Retrieve an HTML page of the most recently added quotes."""
-    user = users.get_current_user()
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
+
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
     logging.info('Latest offset = %s' % offset)
@@ -339,7 +269,6 @@ class RecentHandler(webapp2.RequestHandler):
 
 class FeedHandler(webapp2.RequestHandler):
   def get(self, section):
-    """Retrieve a feed"""
     user = None
     if section == 'recent':    
       quotes, next = models.get_quotes_newest()
@@ -356,7 +285,8 @@ class FeedHandler(webapp2.RequestHandler):
 
 class QuoteHandler (webapp2.RequestHandler):
   def post(self, quoteid):
-    user = users.get_current_user()
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
+
     quote = models.get_quote(quoteid)
     models.comment_on_quote(quote, user, self.request.get('newcomment'))
     self.redirect('')
@@ -367,7 +297,7 @@ class QuoteHandler (webapp2.RequestHandler):
     if quote == None:
       self.response.set_status(404, 'Not Found')
       return      
-    user = users.get_current_user()
+    user = models._get_or_create_user(self.request.cookies.get('u_id'))
     quotes = [quote]
     comments = models.get_comments_for_quote(quote.key)
     template_values = create_template_dict(user, quotes, 'Quote', nexturi=None, prevuri=None, page=0, comments=comments)
@@ -409,7 +339,7 @@ application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
         ('/submit', SubmitLinkPostHandler),
-        ('/logout', Logout),
+        ('/logout', LogoutHandler),
         ('/submittext', SubmitTextPostHandler),
         ('/create', CreateSubZennitHandler),
         ('/vote/', VoteHandler),

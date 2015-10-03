@@ -14,17 +14,16 @@
             {#				<img src="/images/up-grey.png" class="voteup"/>#}
 			<a href="#" class="voteup">&#x2206; <span>({{ quote.up_votes }})</span></a>
             {% endifequal %}
-		</td>
-
-		<td>
-            {% ifequal quote.voted -1 %}
+			{% ifequal quote.voted -1 %}
                 {#				<img src="/images/down.png" class="votedown">#}
 				<a href="#" class="votedown">&#x2207; <span>({{ quote.down_votes }})</span> </a>
                 {% else %}
                 {#				<img src="/images/down-grey.png" class="votedown">#}
 				<a href="#" class="votedown">&#x2207; <span>({{ quote.down_votes }})</span></a>
             {% endifequal %}
+
 		</td>
+
 
 		<td class="quote">
             {% if quote.uri %}

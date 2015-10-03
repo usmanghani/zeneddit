@@ -1,59 +1,63 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <link rel="stylesheet" type="text/css" href="/css/base.css">
+<head>
+	<link rel="stylesheet" type="text/css" href="/css/base.css">
 
-    <title> Zennit
-    {% if section %}    
-      | {{ section }}
-    {% endif %}
-    </title>
-        
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.js"></script>
-    <script src="/js/vote.js"></script>
-    <link rel="alternate" type="application/atom+xml" href="/feed/popular/" title="Popular">
-    <link rel="alternate" type="application/atom+xml" href="/feed/recent/" title="Recent">
-  </head>
-  <body>
+	<title> Zennit
+        {% if section %}
+			| {{ section }}
+        {% endif %}
+	</title>
 
-    <div class="titlebar" >
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.js"></script>
+	<script src="/js/vote.js"></script>
+	<link rel="alternate" type="application/atom+xml" href="/feed/popular/" title="Popular">
+	<link rel="alternate" type="application/atom+xml" href="/feed/recent/" title="Recent">
+</head>
+<body>
 
-            <img src="/images/logo3.png" alt="Zenefits" class="logo">
-            <!--<img src="/images/icon.png" alt="Zenefits" class="logo">-->
-  
-       
-       <div class="tabs">
-         <span class="nav Popular"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
-         <span class="nav Recent"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span> 
-         {%  for t in trending %}
-           <span class="nav Popular"><a href="/z/{{ t }}" class="{% if section == t %}active{% endif %}">{{ t }}</a></span>
-         {% endfor %}
-       </div>
-    </div>
+<div class="titlebar">
 
-    <div class="main-section">
+	<img src="/images/logo3.png" alt="Zenefits" class="logo">
+	<!--<img src="/images/icon.png" alt="Zenefits" class="logo">-->
 
-    <div class="login" >
-      {{ greeting|safe }} <br/>
 
-{#      <img title="Can you get all the stars?" src="/images/progress{{ progress_id }}.png"/><br/>#}
-      <span class="gamehint">{{ progress_msg }}</span><br/>
+	<div class="tabs">
+		<span class="nav Popular"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
+		<span class="nav Recent"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span>
+        {% for t in trending %}
+			<span class="nav Popular"><a href="/z/{{ t }}"
+			                             class="{% if section == t %}active{% endif %}">{{ t }}</a></span>
+        {% endfor %}
+	</div>
+</div>
 
-      <div class="submit">
-          <a href ="/submit">submit</a>
-      </div>
-      <div class="create">
-          <a href ="/create">create your own zennit</a>
-      </div>
-    </div>   
-    
-   <!-- <p class="loginwarning">You must be logged in to vote.</p>   -->
+<div class="main-section">
 
-  
-    {% block body %}
+	<div class="login">
+        {{ greeting|safe }} <br/>
 
-    {% endblock %}
-    </div>
+        {#      <img title="Can you get all the stars?" src="/images/progress{{ progress_id }}.png"/><br/>#}
+		<span class="gamehint">{{ progress_msg }}</span><br/>
 
-  </body>
+		<div class="submit">
+			<a href="/submit" style="display:inline-block;">submit</a>
+		</div>
+		<br>
+		<div class="create" >
+			<a href="/create" style="display:inline-block;">create your own zennit</a>
+		</div>
+	</div>
+
+	<!-- <p class="loginwarning">You must be logged in to vote.</p>   -->
+
+
+	<div>
+        {% block body %}
+
+        {% endblock %}
+	</div>
+</div>
+
+</body>
 </html> 
