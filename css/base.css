@@ -23,6 +23,14 @@ a {
     position: relative;
 }
 
+.tidbit a.voteddown {
+    color: red;
+}
+
+.tidbit a.votedup {
+    color: green;
+}
+
 .login
 {
     clear: both;
