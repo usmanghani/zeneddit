@@ -16,7 +16,7 @@ def get_login_url(default=True):
     return cgi.escape(users.create_login_url("/"))
   else:
     return ("https://secure.zenefits.com/oauth2/login/?next=" +
-            urllib.quote("/oauth2/authorize/?client_id=CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh&state=random_state_string&response_type=code&scope=read&redirect_uri=http://localhost:8080/oauth_callback"))
+            urllib.quote("/oauth2/authorize/?client_id=CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh&state=random_state_string&response_type=code&scope=read&redirect_uri=" + os.environ['REDIRECT_URL']))
 
 def get_greeting():
   user = users.get_current_user()
@@ -308,7 +308,7 @@ class OAuthHandler(webapp2.RequestHandler):
           'grant_type': 'authorization_code',
           'client_id': 'CGZOt4fCPtBDPFB8oSWEg6UWNlNPWs8KNNGZ5OXh',
           'client_secret': 'fDdLLsSF6gazcogc11XpsXaxoG6YXp8tvIPxkUqFC1aJwgrGLjtNF4RPoRzieZmdA9Wz3vTSuGJySVNNVFKC8bPYO2o03ETupaLkkd2AWjn3VWBjp8V0jA08ijPSFPuN',
-          'redirect_uri': 'http://localhost:8080/oauth_callback',
+          'redirect_uri': os.environ['REDIRECT_URL'],
           'code': code
       }))
       response = urllib2.urlopen(req)

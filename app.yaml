@@ -30,3 +30,5 @@ handlers:
 
 
 
+env_variables:
+  REDIRECT_URL: 'http://zennit-1087.appspot.com/oauth_callback'
