@@ -35,9 +35,9 @@
 			<th></th>
 			<td>
                 {% if loggedin %}
-					<div class="submit_tidbit">
+					<div>
 						<form action="/quote/{{ quote.id }}" method="post">
-							<p><label>New Comment: <br> <textarea name="newcomment" rows="12"
+							<p><label class="new-comment-label">New Comment: <br> <textarea name="newcomment" rows="12"
 							                                      cols="40"></textarea></label></p>
 
 							<p><input type="submit" value="Comment"/></p>

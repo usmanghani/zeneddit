@@ -42,7 +42,8 @@ TODO Do something if the user clicks and isn't logged in.
          match the vote. 
        */
       function votedown(e) {
-        $(e.currentTarget).addClass('voteddown')
+        $(e.currentTarget).addClass('voteddown');
+        $('.tidbits .voteup').removeClass('votedup');
         var parpar = $(e.target).parent().parent();
         var quoteid = parpar.find('.quoteid').html();
         var other = parpar.find('.votedown');
@@ -61,7 +62,8 @@ TODO Do something if the user clicks and isn't logged in.
       }
 
       function voteup(e) {
-        $(e.currentTarget).addClass('votedup')
+        $(e.currentTarget).addClass('votedup');
+        $('.tidbits .votedown').removeClass('voteddown');
         var parpar = $(e.target).parent().parent();
         var quoteid = parpar.find('.quoteid').html();
         var other = parpar.find('.voteup');

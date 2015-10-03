@@ -180,6 +180,7 @@ label
 {
     cursor: pointer; 
     vertical-align: middle;
+    text-decoration: none;
 }
 .index
 {
@@ -229,3 +230,7 @@ label
 }
 
 .section  a { color: gray;}
+
+.new-comment-label {
+    text-align: left;
+}

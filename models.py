@@ -335,7 +335,7 @@ def comment_on_quote(quote, user, comment_text):
 		comment = Quote(
 			quote=comment_text,
 			created=created,
-			creator=user,
+			creator=user.key,
 			creation_order=now.isoformat()[:19] + "|" + unique_user,
 			parent=quote.key,
 			q_type=True,
