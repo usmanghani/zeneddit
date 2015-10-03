@@ -1,2 +1,2 @@
-# zeneddit
+# zennit
 reddit on zenefits

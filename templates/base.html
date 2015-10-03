@@ -3,7 +3,7 @@
   <head>
     <link rel="stylesheet" type="text/css" href="/css/base.css">
 
-    <title> Reddit on Zenefits 
+    <title> Zennit
     {% if section %}    
       | {{ section }}
     {% endif %}
@@ -40,9 +40,16 @@
 
 {#      <img title="Can you get all the stars?" src="/images/progress{{ progress_id }}.png"/><br/>#}
       <span class="gamehint">{{ progress_msg }}</span><br/>
+
+      <div class="submit">
+          <a href ="/submit">submit</a>
+      </div>
+      <div class="create">
+          <a href ="/create">create your own zennit</a>
+      </div>
     </div>   
     
-    <p class="loginwarning">You must be logged in to vote.</p>   
+   <!-- <p class="loginwarning">You must be logged in to vote.</p>   -->
 
   
     {% block body %}
