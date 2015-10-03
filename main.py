@@ -251,7 +251,7 @@ class MainHandler(webapp2.RequestHandler):
           )    
         self.response.out.write(unicode(template.render(template_file, template_values)))
 
-class SubmitPostHandler(MainHandler):
+class SubmitLinkPostHandler(MainHandler):
   """Handles Submissions"""
   def get(self):
     user = users.get_current_user()
@@ -270,6 +270,24 @@ class SubmitPostHandler(MainHandler):
     template_file = os.path.join(os.path.dirname(__file__), 'templates/base_submit.html')    
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
+class SubmitTextPostHandler(MainHandler):
+  """Handles Submissions"""
+  def get(self):
+    user = users.get_current_user()
+    offset = self.request.get('offset')
+    page = int(self.request.get('p', '0'))
+    logging.info('Latest offset = %s' % offset)
+    if not offset:
+      offset = None
+    quotes, next = models.get_quotes_newest(offset)
+    if next:
+      nexturi = '?offset=%s&p=%d' % (next, page+1)
+    else:
+      nexturi = None
+
+    template_values = create_template_dict(user, quotes, 'Recent', nexturi, prevuri=None, page=page)
+    template_file = os.path.join(os.path.dirname(__file__), 'templates/base_submittext.html')    
+    self.response.out.write(unicode(template.render(template_file, template_values)))
 
 class CreateSubZennitHandler(MainHandler):
   """Handles Submissions"""
@@ -388,7 +406,8 @@ class TrendingHandler(webapp2.RequestHandler):
 application = webapp2.WSGIApplication(
     [
         ('/', MainHandler),
-        ('/submit', SubmitPostHandler),
+        ('/submit', SubmitLinkPostHandler),
+        ('/submittext', SubmitTextPostHandler),
         ('/create', CreateSubZennitHandler),
         ('/vote/', VoteHandler),
         ('/recent/', RecentHandler),
