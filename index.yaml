@@ -4,3 +4,9 @@ indexes:
   - name: topic
   - name: rank
     direction: desc
+
+- kind: Quote
+  properties:
+  - name: q_type
+  - name: creation_order
+    direction: desc
