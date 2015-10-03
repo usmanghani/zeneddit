@@ -2,6 +2,7 @@
   margin: 0; 
   padding: 0; 
   line-height: 1.1em;
+  font-weight: 100;
   font-family: Helvetica, FreeSans, Arial, 'Bitstream Vera Sans', sans-serif;
   text-decoration: none;
 }
@@ -18,6 +19,8 @@ h2 { padding-left: 1em }
 
 .tidbit a { color: black }
 
+a.votedown span { font-size: 8pt; }
+
 tr.tidbit:hover { background-color: rgba(128, 128, 128, 0.35); }
 
 .tabs { padding: 0.2em; 
@@ -27,8 +30,12 @@ tr.tidbit:hover { background-color: rgba(128, 128, 128, 0.35); }
 
 .logo {     height: 50px; }
 
-.submit_tidbit { margin: 2em; background-color: #f4f4f4;}
-.submit_tidbit p { padding: 0.2em; background-color: #f4f4f4;}
+.submit_tidbit { margin: 2em; 
+    background-color: white;
+}
+.submit_tidbit p { padding: 0.2em; 
+    background-color: white;
+}
 .votecontrols { float: left }
 .quoteid { display:none }
 .del { padding-right: 1em }
