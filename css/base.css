@@ -60,6 +60,15 @@ tr.tidbit:hover
     /*  justify-content: space-around; */
 }
 
+.top-tabs
+{
+    display: flex;
+    /*padding: 0.2em; */
+
+    background-color: #E8E8E8;
+    /*  justify-content: space-around; */
+}
+
 td
 {
     padding-top: 15px;
@@ -143,7 +152,15 @@ label
     background-color: orange;
 }
 
+.top-tabs .nav a {
+    color: black;
+}
 
+.top-tabs .nav a.active
+{
+    background-color: white;
+    color: orange;
+}
 
 .voteup,
 .votedown
@@ -196,5 +213,3 @@ label
 {
     background-color: orange;
 }
-
-.{{ section }} a { color: gray;}

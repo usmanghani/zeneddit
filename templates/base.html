@@ -17,18 +17,21 @@
 <body>
 
 <div class="titlebar">
+  <div class="tabs top-tabs">
+    <span class="nav Popular"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
+    <span class="nav Recent"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span>
+  </div>
+
 
 	<img src="/images/logo3.png" alt="Zenefits" class="logo">
 	<!--<img src="/images/icon.png" alt="Zenefits" class="logo">-->
 
 
 	<div class="tabs">
-		<span class="nav Popular"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
-		<span class="nav Recent"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span>
-        {% for t in trending %}
+    {% for t in trending %}
 			<span class="nav Popular"><a href="/z/{{ t }}"
 			                             class="{% if section == t %}active{% endif %}">{{ t }}</a></span>
-        {% endfor %}
+    {% endfor %}
 	</div>
 </div>
 
