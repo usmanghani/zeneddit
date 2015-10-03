@@ -19,14 +19,15 @@
     <div class="titlebar" >
       <a href="/">
       <img src="/images/logo-zenefits-light.png" alt="Zenefits" class="logo">
-            <img src="/images/icon.png" alt="Zenefits" class="logo">
       </a>
+
+      <h1><a href ="/">Reddit on Zenefits</a></h1>
        
        <p class="tabs">
-         <span class="nav Popular"><a href="/" class="{% if section == 'Popular' %}active{% endif %}">hot</a></span>
-         <span class="nav Recent"><a href="/recent/" class="{% if section == 'Recent' %}active{% endif %}">new</a></span> 
+         <span class="nav Popular"><a href="/">hot</a></span>
+         <span class="nav Recent"><a href="/recent/">new</a></span>
          {%  for t in trending %}
-           <span class="nav Popular"><a href="/z/{{ t }}" class="{% if section == t %}active{% endif %}">{{ t }}</a></span>
+           <span class="nav Popular"><a href="/r/{{ t }}">{{ t }}</a></span>
          {% endfor %}
        </p>
 

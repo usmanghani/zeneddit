@@ -195,7 +195,7 @@ class MainHandler(webapp2.RequestHandler):
       prevuri = None
 
     template_values = create_template_dict(
-        user, quotes, topic or 'Popular' , nexturi, prevuri, page
+        user, quotes, 'Popular', nexturi, prevuri, page
       )    
     template_file = os.path.join(os.path.dirname(__file__), 'templates/index.html')    
     self.response.out.write(unicode(template.render(template_file, template_values)))
@@ -350,7 +350,7 @@ application = webapp2.WSGIApplication(
         ('/recent/', RecentHandler),
         ('/quote/(.*)', QuoteHandler),
         ('/feed/(recent|popular)/', FeedHandler),
-        ('/z/(.*)', TopicHandler),
+        ('/r/(.*)', TopicHandler),
         ('/trending', TrendingHandler),
     ], debug=True)
 
