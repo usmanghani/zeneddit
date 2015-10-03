@@ -30,13 +30,13 @@
             {% if quote.uri %}
 				<a href="{{ quote.uri|escape }}"><span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
 
-				</a><sub><a href="/r/{{ quote.topic|escape }}"><span
-						class="quoteid">{{ quote.id }}</span> /r/{{ quote.topic|escape }}
+				</a><sub><a href="/z/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> /z/{{ quote.topic|escape }}
 				</a></sub><br>
             {% else %}
 				<span class="quoteid">{{ quote.id }}</span> {{ quote.quote|escape }}
-	            <sub><a href="/r/{{ quote.topic|escape }}"><span
-						class="quoteid">{{ quote.id }}</span> /r/{{ quote.topic|escape }}
+	            <sub><a href="/z/{{ quote.topic|escape }}"><span
+						class="quoteid">{{ quote.id }}</span> /z/{{ quote.topic|escape }}
 				</a></sub><br>
             {% endif %}
 		</td>
@@ -44,7 +44,7 @@
 {#		<td class="quote">#}
 {##}
 {#            {% ifnotequal quote.topic None %}#}
-{#				<a href="/r/{{ quote.topic|escape }}"><span#}
+{#				<a href="/z/{{ quote.topic|escape }}"><span#}
 {#						class="quoteid">{{ quote.id }}</span> {{ quote.topic|escape }}#}
 {#				</a><br>#}
                 {#            {% else %}#}

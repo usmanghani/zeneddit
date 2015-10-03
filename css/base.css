@@ -28,6 +28,16 @@ tr.tidbit:hover { background-color: rgba(128, 128, 128, 0.35); }
   display: flex;
     justify-content: space-around; }
 
+td {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+table {
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
 .logo {     height: 50px; }
 
 .submit_tidbit { margin: 2em; 

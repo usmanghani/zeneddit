@@ -350,7 +350,7 @@ application = webapp2.WSGIApplication(
         ('/recent/', RecentHandler),
         ('/quote/(.*)', QuoteHandler),
         ('/feed/(recent|popular)/', FeedHandler),
-        ('/r/(.*)', TopicHandler),
+        ('/z/(.*)', TopicHandler),
         ('/trending', TrendingHandler),
     ], debug=True)
 
