@@ -47,15 +47,15 @@ class Quote(db.Model):
   """
   quote = db.StringProperty(required=True)
   uri   = db.StringProperty()
-  rank = db.StringProperty(indexed=True)
+  rank = db.StringProperty()
   created = db.IntegerProperty(default=0)
-  creation_order = db.StringProperty(default=" ", indexed=True)
+  creation_order = db.StringProperty(default=" ")
   votesum = db.IntegerProperty(default=0)
   up_votes = db.IntegerProperty(default=0)
   down_votes = db.IntegerProperty(default=0)
   creator = db.UserProperty()
-  q_type = db.BooleanProperty(default=False, indexed=True) # true if is comment
-  topic = db.StringProperty(default="General", indexed=True)
+  q_type = db.BooleanProperty(default=False) # true if is comment
+  topic = db.StringProperty(default="General")
 
 # class Comment(db.Model):
 #   text = db.StringProperty(required=True, multiline=True)
