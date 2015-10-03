@@ -93,6 +93,7 @@ def _get_or_create_user(useremail):
 		user.put()
 	return user
 
+
 def _get_or_create_voter(user):
 	voter = Voter.get_by_id(id=user.useremail)
 	if voter is None:
@@ -223,6 +224,23 @@ def get_quotes_by_topic(offset=None, topic=None):
 	return quotes, extra
 
 
+def get_quotes(page=0, topic=None):
+	assert page >= 0
+	assert page < 20
+	extra = None
+	if topic is None or topic == '':
+		quotes = Quote.query().order(
+			-Quote.rank).fetch(PAGE_SIZE + 1)
+	else:
+		quotes = Quote.query(Quote.topic == topic).order(-Quote.rank).fetch(PAGE_SIZE + 1)
+
+	if len(quotes) > PAGE_SIZE:
+		if page < 19:
+			extra = quotes[-1]
+		quotes = quotes[:PAGE_SIZE]
+	return quotes, extra
+
+
 def rank_quote(ups, downs, date):
 	from datetime import datetime
 	from math import log
@@ -284,23 +302,6 @@ def set_vote(quote_id, user, newvote, is_url_safe=True):
 
 	db.transaction(txn, xg=True)
 	_set_progress_hasVoted(user)
-
-
-def get_quotes(page=0, topic=None):
-	assert page >= 0
-	assert page < 20
-	extra = None
-	if topic is None or topic == '' or topic.lower() == 'general':
-		quotes = Quote.query(db.OR(Quote.topic == None, Quote.topic == '', Quote.topic == 'General')).order(
-			-Quote.rank).fetch(PAGE_SIZE + 1)
-	else:
-		quotes = Quote.query(Quote.topic == topic).order(-Quote.rank).fetch(PAGE_SIZE + 1)
-
-	if len(quotes) > PAGE_SIZE:
-		if page < 19:
-			extra = quotes[-1]
-		quotes = quotes[:PAGE_SIZE]
-	return quotes, extra
 
 
 def voted(quote, user):
