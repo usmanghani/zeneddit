@@ -84,20 +84,20 @@ def create_template_dict(user, quotes, section, nexturi=None, prevuri=None, page
   #This function sets a secure cookie (using hashing method created above) 
   #for the name and value that are passed to this function; Setting the cookie is needed
   #to complete the login
-def set_secure_cookie(name, val):
-  cookie_val = secure.make_secure_val(val)
-  webapp2.RequestHandler.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name, cookie_val))
+#def set_secure_cookie(name, val):
+#  cookie_val = secure.make_secure_val(val)
+#  webapp2.RequestHandler.response.headers.add_header('Set-Cookie', '%s=%s; Path=/' % (name, cookie_val))
 
   #This function reads unsecure cookie
-def read_unsecure_cookie(self, name):
-  cookie_val = self.request.cookies.get(name)
-  return cookie_val
+#def read_unsecure_cookie(self, name):
+#  cookie_val = self.request.cookies.get(name)
+#  return cookie_val
 
   #This function checks if the cookies are untampered then returns true, if an already loggged
   #in user comes back to the page;
-def read_secure_cookie(name):
-  cookie_val = webapp2.RequestHandler.request.cookies.get(name)
-  return cookie_val and secure.check_secure_val(cookie_val)
+#def read_secure_cookie(name):
+#  cookie_val = webapp2.RequestHandler.request.cookies.get(name)
+#  return cookie_val and secure.check_secure_val(cookie_val)
 
 
   #This function deletes the u_id cookie; Cookie deletion = logout
@@ -107,15 +107,15 @@ class Logout(webapp2.RequestHandler):
     self.response.headers.add_header('Set-Cookie', 'u_id=; Path=/')
     self.redirect('/')
 
-def initialize(self, *a, **kw):
-  webapp2.RequestHandler.initialize(self, *a, **kw)
-  uid = self.read_secure_cookie('u_id')
-  if uid:
+#def initialize(self, *a, **kw):
+#  webapp2.RequestHandler.initialize(self, *a, **kw)
+#  uid = self.read_secure_cookie('u_id')
+#  if uid:
   #print "USER", ndb.Key(urlsafe=uid).get()
-    self.user = uid and models.Users.by_id(str(uid).lower()) #Changed to lowercase
+#    self.user = uid and models.Users.by_id(str(uid).lower()) #Changed to lowercase
   #print "SELF USER", self.user, str(self.user)
-  else:
-    self.user = None
+#  else:
+#    self.user = None
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -130,7 +130,7 @@ class MainHandler(webapp2.RequestHandler):
     cookie_val = self.request.cookies.get('u_id')
     logging.info(cookie_val)
     user = cookie_val
-    logging.info("COOOOKIEIEEEE")
+    logging.info("COOKIEEEE")
     
     page = int(self.request.get('p', '0'))
     quotes, next = models.get_quotes(page, topic)
@@ -156,7 +156,7 @@ class MainHandler(webapp2.RequestHandler):
     cookie_val = self.request.cookies.get('u_id')
     logging.info(cookie_val)
     user = cookie_val
-    logging.info("COOOOKIEIEEEE")
+    logging.info("COOKIEEEE")
 
     text = self.request.get('newtidbit').strip()
     if len(text) > 500:
@@ -217,8 +217,7 @@ class SubmitLinkPostHandler(MainHandler):
     cookie_val = self.request.cookies.get('u_id')
     logging.info(cookie_val)
     user = cookie_val
-    logging.info("COOOOKIEIEEEE")
-
+    logging.info(user)
 
     offset = self.request.get('offset')
     page = int(self.request.get('p', '0'))
@@ -231,9 +230,14 @@ class SubmitLinkPostHandler(MainHandler):
     else:
       nexturi = None
 
-    template_values = create_template_dict(user, quotes, 'Recent', nexturi, prevuri=None, page=page)
-    template_file = os.path.join(os.path.dirname(__file__), 'templates/base_submit.html')    
-    self.response.out.write(unicode(template.render(template_file, template_values)))
+    if user:
+      template_values = create_template_dict(user, quotes, 'Recent', nexturi, prevuri=None, page=page)
+      template_file = os.path.join(os.path.dirname(__file__), 'templates/base_submit.html')    
+      self.response.out.write(unicode(template.render(template_file, template_values)))
+    else:
+      login_url = get_login_url(default=False)
+      self.redirect(login_url)
+
 
 class SubmitTextPostHandler(MainHandler):
   """Handles Submissions"""
@@ -242,7 +246,7 @@ class SubmitTextPostHandler(MainHandler):
     cookie_val = self.request.cookies.get('u_id')
     logging.info(cookie_val)
     user = cookie_val
-    logging.info("COOOOKIEIEEEE")
+    logging.info("COOKIEEEE")
 
 
     offset = self.request.get('offset')
@@ -267,7 +271,7 @@ class CreateSubZennitHandler(MainHandler):
     cookie_val = self.request.cookies.get('u_id')
     logging.info(cookie_val)
     user = cookie_val
-    logging.info("COOOOKIEIEEEE")
+    logging.info("COOKIEEEE")
 
 
     offset = self.request.get('offset')
@@ -296,7 +300,7 @@ class VoteHandler (webapp2.RequestHandler):
     cookie_val = self.request.cookies.get('u_id')
     logging.info(cookie_val)
     user = cookie_val
-    logging.info("COOOOKIEIEEEE")
+    logging.info("COOKIEEEE")
 
 
     """Add or change a vote for a user."""

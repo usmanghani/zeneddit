@@ -1,21 +1,15 @@
 * { 
   margin: 0; 
   padding: 0; 
-  line-height: 1.2em;
+/*  line-height: 1.2em; */
   font-weight: 100;
   font-family: Helvetica, FreeSans, Arial, 'Bitstream Vera Sans', sans-serif;
   text-decoration: none;
 }
+
 .login { text-align: right; clear: both; color: black; padding-top: 0.2em;}
 
-h1 { display: inline; font-size: 16pt;}
-
-/* h1 a { color: white } */
-h2 { padding-left: 1em }
-
 .main-section { background-color: white; }
-
-.titlebar { }
 
 .tidbit a { color: black }
 
@@ -23,7 +17,8 @@ a.votedown span { font-size: 8pt; }
 
 tr.tidbit:hover { background-color: rgba(128, 128, 128, 0.35); }
 
-.tabs { padding: 0.2em; 
+.tabs { 
+  /*padding: 0.2em; */
   background-color: #C1C1C1;
   display: flex;
   /*  justify-content: space-around; */
@@ -39,7 +34,7 @@ table {
   padding-right: 50px;
 }
 
-.logo {     height: 50px; }
+.logo { height: 65px;}
 
 .submit_tidbit { margin: 2em; 
     background-color: white;
@@ -55,7 +50,7 @@ table {
 .next { padding-left: 3em; padding-top: 1em; background-color: white;}
 
 .nav { margin-left: 0.5em; margin-right: -0.2em; }
-.nav a { padding: 0.2em; color: white; }
+.nav a {  color: white; }
 .nav a.active {background-color: orange; }
 
 .{{ section }} a { color: gray;}
