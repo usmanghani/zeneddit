@@ -1,7 +1,7 @@
 * { 
   margin: 0; 
   padding: 0; 
-  line-height: 1.1em;
+  line-height: 1.2em;
   font-weight: 100;
   font-family: Helvetica, FreeSans, Arial, 'Bitstream Vera Sans', sans-serif;
   text-decoration: none;
@@ -26,7 +26,8 @@ tr.tidbit:hover { background-color: rgba(128, 128, 128, 0.35); }
 .tabs { padding: 0.2em; 
   background-color: #C1C1C1;
   display: flex;
-    justify-content: space-around; }
+  /*  justify-content: space-around; */
+  }
 
 td {
     padding-top: 15px;
