@@ -13,6 +13,7 @@ class Counter(db.Model):
 
 class Quote(db.Model):
   quote = db.StringProperty(required=True)
+  text = db.StringProperty()
   uri   = db.StringProperty()
   rank = db.IntegerProperty(indexed=True)
   created = db.IntegerProperty(default=0)
@@ -149,7 +150,7 @@ def _unique_user(user, transact=True):
   return hashlib.md5(user + "|" + str(count)).hexdigest()
   
 
-def add_quote(text, user, uri=None, _created=None, topic=None):
+def add_quote(title, text, user, uri=None, _created=None, topic=None):
   def txn():
     try:
       now = datetime.datetime.now()
@@ -162,11 +163,12 @@ def add_quote(text, user, uri=None, _created=None, topic=None):
       voter.karma += 1
 
       q = Quote(
-        quote=text,
+        quote=title,
         created=created,
         creator=user,
         creation_order=now.isoformat()[:19] + "|" + unique_user,
         uri=uri,
+        text=text,
         q_type=False,
         topic=topic,
       )
@@ -246,18 +248,21 @@ def rank_quote(ups, downs, date):
       seconds = epoch_seconds(date) - 1134028003
       return round(sign * order + seconds / 45000, 7)
 
-  return hot(ups, downs, date)
+  return int(hot(ups, downs, date))
 
-def set_vote(quote_id, user, newvote):
+def set_vote(quote_id, user, newvote, is_url_safe=True):
   if user is None:
     return
   
   def txn():
     voter = _get_or_create_voter(user)
-    if voter.hasVoted:
-      return
+    # if voter.hasVoted:
+    #   return
 
-    quote = db.Key(urlsafe=quote_id).get()
+    if is_url_safe:
+      quote = db.Key(urlsafe=quote_id).get()
+    else:
+      quote = quote_id.get()
     if quote is None:
       return
     if quote.creator != user:

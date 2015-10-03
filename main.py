@@ -146,7 +146,7 @@ class MainHandler(webapp2.RequestHandler):
       prevuri = None
 
     template_values = create_template_dict(
-        user, quotes, topic or 'Popular' , nexturi, prevuri, page
+        user, quotes, topic or 'Popular', nexturi, prevuri, page
       )    
     template_file = os.path.join(os.path.dirname(__file__), 'templates/index.html')    
     self.response.out.write(unicode(template.render(template_file, template_values)))
@@ -166,6 +166,7 @@ class MainHandler(webapp2.RequestHandler):
       return
     uri = self.request.get('tidbituri').strip()
     topic = self.request.get('tidbittopic').strip()
+    title = self.request.get('tidbittitle').strip()
     parsed_uri = urlparse.urlparse(uri)
 
     progress_id, progress_msg, greeting = get_greeting(user)      
@@ -176,19 +177,20 @@ class MainHandler(webapp2.RequestHandler):
          'progress_msg': progress_msg,
          'greeting': greeting,
          'loggedin': user,
+         'title': title,
          'text' : text,
          'uri' : uri,
          'topic': topic,
          'error_msg' : 'The supplied link is not a valid absolute URI'
       }
-      template_file = os.path.join(os.path.dirname(__file__), 
+      template_file = os.path.join(os.path.dirname(__file__),
           'templates/add_quote_error.html'
       )
       self.response.out.write(unicode(template.render(template_file, template_values)))
     else:
-      quote_id = models.add_quote(text, user, uri=uri, topic=topic)
+      quote_id = models.add_quote(title, text, user, uri=uri, topic=topic)
       if quote_id is not None:
-        models.set_vote(quote_id, user, 1)
+        models.set_vote(quote_id, user, 1, is_url_safe=False)
         self.redirect('/recent/')
       else:
         template_values  = {
@@ -196,14 +198,15 @@ class MainHandler(webapp2.RequestHandler):
            'progress_msg': progress_msg,
            'greeting': greeting,
            'loggedin': user,
+           'title': title,
            'text' : text,
            'uri' : uri,
            'topic': topic,
-           'error_msg' : 'An error occured while adding this quote, please try again.'
+           'error_msg': 'An error occured while adding this quote, please try again.'
         }
-        template_file = os.path.join(os.path.dirname(__file__), 
+        template_file = os.path.join(os.path.dirname(__file__),
             'templates/add_quote_error.html'
-          )    
+          )
         self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
@@ -283,8 +286,6 @@ class CreateSubZennitHandler(MainHandler):
     self.response.out.write(unicode(template.render(template_file, template_values)))
 
 
-
-
 class TopicHandler(MainHandler):
   def get(self, topic):
     return super(TopicHandler, self)._get_impl(topic=topic)
@@ -310,7 +311,7 @@ class VoteHandler (webapp2.RequestHandler):
       return
     vote = int(vote)
     models.set_vote(quoteid, user, vote)
-
+    self.redirect('')
 
 class RecentHandler(webapp2.RequestHandler):
   def get(self):
@@ -351,7 +352,6 @@ class FeedHandler(webapp2.RequestHandler):
 
 class QuoteHandler (webapp2.RequestHandler):
   def post(self, quoteid):
-    # """Delete a quote."""
     user = users.get_current_user()
     quote = models.get_quote(quoteid)
     models.comment_on_quote(quote, user, self.request.get('newcomment'))

@@ -1,20 +1,30 @@
 {% if loggedin %}
 	<div class="submit_tidbit">
 
+		<span class=""><a href="/submit">Link</a></span>
+		<span class=""><a href="/submittext">Text</a></span>
+
+{#		<p class="tabs">#}
+{#		</p>#}
+
+
 		<div class="linkpost">
-			<a href="/submit">link<a>
+
 		</div>
 
 		<div class="textpost">
-			<a href="/submittext">text<a>
+
 		</div>
 
 		<form action="/" method="post">
-			<p><label>New Submission: <br> <textarea name="newtidbit" rows="12" cols="40"></textarea></label></p>
+			<p>New Submission: </p>
+			<p><label>Title: <input type="text" name="tidbittitle"></label></p>
 
-			<p><label>Link: <input type="text" name="tidbituri" value=""/></p>
+{#			<p><label>Text: <br> <textarea name="newtidbit" rows="12" cols="40"></textarea></label></p>#}
 
-			<p><label>Topic: <input type="text" name="tidbittopic" value=""/></p>
+			<p><label>Link: <input type="text" name="tidbituri" value=""></label></p>
+
+			<p><label>Topic: <input type="text" name="tidbittopic" value=""></label></p>
 
 			<p><input type="submit" value="Add"/></p>
 		</form>

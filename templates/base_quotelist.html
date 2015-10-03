@@ -9,10 +9,10 @@
 		<td>
             {% ifequal quote.voted 1 %}
             {#				<img src="/images/up.png" class="voteup"/>#}
-			<a href="#" class="votedown">&#x2206; <span>({{ quote.up_votes }})</span></a>
+			<a href="#" class="voteup">&#x2206; <span>({{ quote.up_votes }})</span></a>
             {% else %}
             {#				<img src="/images/up-grey.png" class="voteup"/>#}
-			<a href="#" class="votedown">&#x2206; <span>({{ quote.up_votes }})</span></a>
+			<a href="#" class="voteup">&#x2206; <span>({{ quote.up_votes }})</span></a>
             {% endifequal %}
 		</td>
 
