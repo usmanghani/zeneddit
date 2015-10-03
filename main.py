@@ -115,10 +115,13 @@ class MainHandler(webapp2.RequestHandler):
     text = self.request.get('newtidbit').strip()
     if len(text) > 500:
       text = text[:500]
-    if not text:
+    uri = self.request.get('tidbituri').strip()
+
+    if not text and not uri:
+      logging.info("No text or uri was submitted.")
       self.redirect('/')
       return
-    uri = self.request.get('tidbituri').strip()
+
     topic = self.request.get('tidbittopic').strip()
     title = self.request.get('tidbittitle').strip()
     parsed_uri = urlparse.urlparse(uri)

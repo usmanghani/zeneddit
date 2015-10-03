@@ -10,6 +10,10 @@
     text-decoration: none;
 }
 
+a {
+    text-decoration: underline;
+}
+
 .add-button {
     background-color: orange;
     border-style: none;
@@ -198,6 +202,7 @@ label
 
     display: none;
 
+
     padding-left: 2em; 
 
     background: yellow;
@@ -214,3 +219,5 @@ label
 {
     background-color: orange;
 }
+
+.section  a { color: gray;}
