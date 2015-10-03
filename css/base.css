@@ -107,6 +107,7 @@ label
 .logo
 {
     height: 65px;
+    margin-bottom: -4px;
 }
 
 .submit_tidbit
