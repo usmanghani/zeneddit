@@ -177,12 +177,12 @@ def add_quote(title, text, user, uri=None, _created=None, topic=None):
 				counter = _get_or_create_counter(topic)
 				counter.counter += 1
 
-			zennit = _get_or_create_zennit(topic, user)
+			# zennit = _get_or_create_zennit(topic, user)
 
 			if counter:
-				db.put_multi([q, voter, counter, zennit])
+				db.put_multi([q, voter, counter])
 			else:
-				db.put_multi([q, voter, zennit])
+				db.put_multi([q, voter])
 
 			return q.key
 		except:
