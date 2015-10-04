@@ -13,6 +13,8 @@ DAY_SCALE = 4
 class Counter(db.Model):
 	counter = db.IntegerProperty()
 
+class Topic(db.Model):
+	description = db.StringProperty()
 
 class Quote(db.Model):
 	quote = db.StringProperty(required=True)

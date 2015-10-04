@@ -148,7 +148,7 @@ class MainHandler(webapp2.RequestHandler):
       quote_id = models.add_quote(title, text, user, uri=uri, topic=topic)
       if quote_id is not None:
         models.set_vote(quote_id, user, 1, is_url_safe=False)
-        self.redirect('/recent/')
+        self.redirect('/z/' + topic)
       else:
         template_values  = {
            'progress_id': progress_id,
