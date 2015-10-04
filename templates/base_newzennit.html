@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% if loggedin %}
+	<div class="newzennit">
+
+		<form action="/" method="post">
+			<p>Submit New Link: </p>
+			<p><label>Name: </label><input class="align-input" type="text" name="zennitname"></p>
+			<p><label>Text: </label><textarea class="align-input" name="zennitdescription" rows="12" cols="40"></textarea></p>
+			<p><input class="align-input add-button" type="submit" value="Create"/></p>
+		</form>
+	</div>
+{% endif %}
+
+
+

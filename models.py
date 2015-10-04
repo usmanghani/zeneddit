@@ -13,8 +13,11 @@ DAY_SCALE = 4
 class Counter(db.Model):
 	counter = db.IntegerProperty()
 
-class Topic(db.Model):
+class Zennit(db.Model):
+	name = db.StringProperty()
 	description = db.StringProperty()
+	user = db.KeyProperty(kind='User')
+	created = db.DateTimeProperty(auto_now_add=True)
 
 class Quote(db.Model):
 	quote = db.StringProperty(required=True)
@@ -85,6 +88,11 @@ class Voter(db.Model):
 	hasAddedQuote = db.BooleanProperty(default=False)
 	karma = db.IntegerProperty(default=1)
 
+def _get_or_create_zennit(name, user, description=None):
+	zennit = Zennit.get_by_id(name)
+	if zennit is None:
+		zennit = Zennit(id=name, name=name, description=description, user=user)
+	return zennit
 
 def _get_or_create_user(useremail):
 	if useremail is None or useremail == '':
@@ -169,10 +177,12 @@ def add_quote(title, text, user, uri=None, _created=None, topic=None):
 				counter = _get_or_create_counter(topic)
 				counter.counter += 1
 
+			zennit = _get_or_create_zennit(topic, user)
+
 			if counter:
-				db.put_multi([q, voter, counter])
+				db.put_multi([q, voter, counter, zennit])
 			else:
-				db.put_multi([q, voter])
+				db.put_multi([q, voter, zennit])
 
 			return q.key
 		except:
@@ -349,3 +359,7 @@ def comment_on_quote(quote, user, comment_text):
 
 def get_trending_topics():
 	return [t.key.id() for t in Counter.query().order(-Counter.counter).fetch(20)]
+
+def add_zennit(name, description, user):
+	return _get_or_create_zennit(name, user, description=description)
+
